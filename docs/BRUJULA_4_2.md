@@ -5,7 +5,7 @@ Esta actualización conserva la interfaz de Brújula 4.1 y añade funciones beta
 ## Planificar con IA o ChatGPT
 
 Pulsa + Planificar. Elige Planificar con IA para abrir el asistente con lo que escribiste.
-Elige ChatGPT (beta) para generar una solicitud privada en Supabase. Luego abre ChatGPT, con el conector Supabase autorizado, y pide: Revisa mi última solicitud de Brújula y prepara la propuesta. Regresa a la aplicación y pulsa Buscar propuesta. No se consume la API de OpenAI ni existe una llamada automática a ChatGPT desde la web.
+Elige ChatGPT (beta) para generar una solicitud privada en Supabase. Pulsa Copiar mensaje y abrir ChatGPT: solo se copia un mensaje corto con el ID único de esa solicitud, no tu horario. Pégalo en ChatGPT con Supabase autorizado. Regresa a la aplicación y pulsa Buscar propuesta. No consultes otras cuentas. No se consume la API de OpenAI ni existe una llamada automática a ChatGPT desde la web.
 La cuenta de ChatGPT no se conecta mediante una contraseña dentro de Brújula. Suscripción y API son servicios distintos.
 
 ## Materiales
