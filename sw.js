@@ -2,7 +2,7 @@
    - App instalable y usable sin conexión (copia local de la app, nunca de tus datos de Supabase).
    - Actualizar NO borra localStorage ni IndexedDB: solo reemplaza los archivos de la app.
    - Las peticiones a Supabase (cuenta, datos, Gemini) nunca se guardan en caché. */
-const VERSION = '4.0.0';
+const VERSION = '4.1.0';
 const CACHE = 'brujula-app-v' + VERSION;
 const RUNTIME = 'brujula-runtime-v1';
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
@@ -24,7 +24,7 @@ const SHELL = [
   './js/ui/details.js',
   './js/views/auth.js',
   './js/views/week.js',
-  './js/app.js?v=4.0.0',
+  './js/app.js?v=4.1.0',
   './js/cloud/cloud.js',
   './js/ui/feedback.js',
   './js/ui/proposal.js',
@@ -34,6 +34,7 @@ const SHELL = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './js/engine/rules.js',
+  './js/engine/recurrence.js',
   './js/features/pwa.js',
   './js/views/common.js',
   './js/views/course.js',
