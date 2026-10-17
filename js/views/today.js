@@ -171,6 +171,30 @@ function banners(s) {
   return out.join('');
 }
 
+
+function comingSoon(s,today){
+  const rows=s.blocks.filter(b=>b.date>=today&&b.status!=='mastered'&&b.status!=='review')
+    .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)).slice(0,4);
+  if(!rows.length)return '';
+  return '<section class="section">'+sectionHead('Después viene', {link:'#/semana',linkLabel:'Ver semana'})+
+    '<div class="panel mini-coming">'+rows.map(b=>'<button type="button" class="mini-event" data-act="open-block" data-id="'+esc(b.id)+'">'+
+    '<span class="mini-dot '+(b.kind==='personal'?'personal':'study')+'"></span><span class="mini-time">'+
+    esc(fmtRelDay(b.date,today))+' '+esc(b.start)+'</span><b>'+esc(cut(b.title,58))+'</b></button>').join('')+'</div></section>';
+}
+function miniWeek(s,today){
+  const dates=Array.from({length:7},(_,i)=>addDays(today,i));
+  const titles=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  return '<section class="section">'+sectionHead('Mi semana', {link:'#/semana',linkLabel:'Abrir horario'})+
+    '<div class="panel mini-week">'+dates.map(d=>{
+      const day=new Date(d+'T12:00:00').getDay();
+      const blocks=s.blocks.filter(b=>b.date===d).sort((a,b)=>a.start.localeCompare(b.start));
+      return '<a class="mini-week-row" href="#/semana/'+d+'"><span class="mini-day">'+titles[day]+' <b>'+Number(d.slice(8))+'</b></span><span class="mini-items">'+
+      (blocks.length?blocks.slice(0,3).map(b=>'<span class="mini-activity"><i class="mini-dot '+(b.status==='mastered'||b.status==='review'?'done':b.kind==='personal'?'personal':'study')+'"></i>'+esc(b.start)+' '+esc(cut(b.title,23))+'</span>').join(''):'<span class="muted">Libre</span>')+
+      (blocks.length>3?'<span class="small muted">+'+(blocks.length-3)+'</span>':'')+
+      '</span></a>';
+    }).join('')+'</div></section>';
+}
+
 export function render(c) {
   const s = c.state;
   const f = computeFocus(s, c.now);
@@ -192,8 +216,8 @@ export function render(c) {
     ${f.load.overloaded ? `<div class="notice warn">${icon('triangle-alert')}<div>Hoy tienes <b>${esc(fmtDuration(f.load.studyMin))}</b> de estudio, más que tu límite de ${esc(fmtDuration(f.load.maxStudy))}. Considera mover algo.</div></div>` : ''}
     <div class="panel">${courseLine(f, s)}</div></section>`;
   return `<div class="today">${banners(s)}
-    <div class="today-grid"><div class="stack-lg">${rumbo(f, s)}${decide}${line}</div>
-    <div class="today-side">${priorities}${evalCards(f)}${habitsToday(s, f.today)}</div></div>
+    <div class="today-grid"><div class="stack-lg">${rumbo(f, s)}${decide}${line}${comingSoon(s,c.today)}</div>
+    <div class="today-side">${priorities}${evalCards(f)}${habitsToday(s, f.today)}${miniWeek(s,c.today)}</div></div>
   </div>`;
 }
 
