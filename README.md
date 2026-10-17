@@ -1,142 +1,81 @@
-# Brújula 3.9 — Calendario simple y modos inteligentes
+# Brújula 4.0
 
-Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
+Organizador académico y personal para estudiantes universitarios. Es una PWA estática (GitHub Pages) con cuentas y sincronización en Supabase y un asistente Gemini que solo propone cambios, nunca los aplica por su cuenta.
 
-## Mejoras 3.3
-- Al entrar por el enlace público se muestra inicio de sesión / creación de cuenta. Los datos de otra cuenta no se muestran en el navegador antes de autenticarse.
-- Después de entrar, la pantalla principal es un horario semanal de lunes a domingo. La columna lateral presenta pendientes y una guía sencilla.
-- Los usuarios nuevos reciben ayuda para agregar actividades, crear cursos o preparar con su propia cuenta de ChatGPT un JSON de horario para revisar e importar.
-- Las tareas personales atrasadas pueden marcarse como hechas. Para actividades flexibles se ofrece un nuevo hueco, evitando superposiciones, la comida del mediodía y la franja de descanso 21:00–07:00. Solo se reprograma con confirmación explícita del usuario.
-- No se reprograman automáticamente clases, exámenes ni sesiones dominadas. Los límites de descanso son valores de prueba: cada persona debe definir luego su rutina.
-- Se simplificó la navegación y se adaptó la semana al tamaño de pantalla.
+Al abrirla, la pantalla **Hoy** responde tres preguntas: qué hacer ahora, qué quedó pendiente y qué es prioritario.
 
-**Advertencia sobre IA:** El acceso a ChatGPT Plus no autoriza compartir una cuenta con cinco personas ni alimenta automáticamente un chat dentro de esta web. Para consultas abiertas cada usuario debe usar su propia cuenta; una integración de chat integrada requeriría un backend y credenciales separadas y protegidas. Las solicitudes temporales de Supabase todavía no son una integración multiusuario segura para terceros.
+![Vista previa de Brújula 4.0](docs/vista-previa.png)
 
-**Límites de prueba:** El rediseño y la reprogramación se probaron en un navegador automatizado con datos de demostración. El alta/inicio de sesión real, sincronización y aislamiento deben verificarse con dos cuentas reales antes de compartir con invitados.
+## Qué hace
 
-## Para cada persona
-1. Abrir la web publicada en GitHub Pages.
-2. Ir a **Nube y datos → Crear cuenta**, o **Entrar** si ya tiene cuenta.
-3. Si hay una copia en la nube, elegir **Recuperar de nube**; no pulsar **Guardar en nube** sobre una copia vacía.
-4. Crear los cursos en **Mis cursos** y las actividades en **Horario → Añadir bloque**.
-5. Pulsar **Guardar en nube** si es la primera vez. Los siguientes cambios se sincronizan cuando está activada la conexión.
+- **Hoy.** «Tu rumbo»: la actividad actual o la siguiente, con un botón para empezar. Debajo: «¿Cómo te fue?» (lo que ya pasó y espera tu decisión; nunca se marca «no hecho» solo porque pasó la hora), prioridades explicadas, el recorrido del día con sus huecos libres, los próximos exámenes y los hábitos.
+- **Semana.** Agenda por día en el celular (deslizas entre días) y cuadrícula de 7 días en la computadora, donde puedes arrastrar para mover (se valida en vivo) o tocar un hueco para crear algo. **Planificar semana** reparte tus prioridades en los días con menos carga y te muestra la propuesta antes de aplicarla.
+- **Estudio.** Cursos con dificultad, importancia y créditos. Temas con dominio real (0–100 %), niveles, prerrequisitos y repaso espaciado. Exámenes y entregas con cuenta regresiva, porcentaje de preparación y plan de estudio automático. Lista de repasos que tocan hoy.
+- **Sesión guiada.** Cinco pasos (preparar, entender, practicar, evaluar, cerrar), temporizador Pomodoro, sonido ambiental generado en el dispositivo y lectura en voz alta. Al cerrar eliges *Lo domino*, *Repasar* o *No lo entendí*: eso actualiza el tema, anota la dificultad y propone el repaso.
+- **Tres modos cuando algo no se cumple.** *Preguntar* (por defecto) te propone y tú decides. *Mixto* mueve solas las tareas personales y pregunta por el estudio. *Automático* mueve lo flexible y crea repasos. Mixto y Automático piden consentimiento informado. Clases, exámenes, temas dominados, sueño, almuerzo y descansos están siempre protegidos, y todo se puede deshacer.
+- **Alta rápida en español.** «Examen de Física el 3 de noviembre a las 10», «repasar vectores mañana 4pm 45 min». Un examen crea también su evaluación.
+- **Asistente.** Responde al instante, sin gastar consultas, lo que se resuelve con tus datos (qué hago, cruces, exámenes, repasos, «no pude estudiar física»). Con tu permiso usa Gemini para explicar temas, analizar tu semana y proponer cambios. Cada propuesta se valida en tu dispositivo y solo se aplica lo que apruebas.
+- **Progreso y Vida.** Horas planificadas frente a realizadas, dominio por curso, dificultades abiertas e historial con deshacer. Hábitos con rachas y un diario de 3 minutos que nunca se envía a la IA.
+- **PWA.** Se instala en Android (y en iPhone desde Safari), abre sin conexión con tu última copia y avisa antes de cada actividad. Los **avisos con la app cerrada** (beta) requieren desplegar un servidor opcional: [docs/AVISOS_PUSH.md](docs/AVISOS_PUSH.md).
 
-## Usar ChatGPT para proponer cambios de horario
-1. Ir a **ChatGPT y horario**.
-2. Pulsar **Copiar mi horario para ChatGPT** y pegarlo en una conversación privada.
-3. Pedir, por ejemplo: «Adapta mi horario para repasar Física dos días antes del examen, sin mover mis clases ni reducir mi descanso».
-4. Copiar el JSON de cambios generado por el asistente y pegarlo en **Propuesta JSON de cambios**.
-5. Pulsar **Verificar cambios**. Revisar la vista previa, horarios superpuestos y actividades a eliminar.
-6. Pulsar **Aplicar cambios verificados**. Requiere confirmación. Si hay sesión iniciada y sincronización habilitada, Brújula guardará los datos en Supabase.
+## Diseño (por qué se ve así)
 
-Esto **no** es acceso directo de ChatGPT a la base de datos: no hay escritura automática sin una integración autenticada y permisos adecuados.
+- **Idea: el día como recorrido de orientación.** En los mapas de orientación la ruta se sobreimprime en magenta: salida ▲, controles numerados ○ y meta ◎. Brújula usa esa gramática para el «recorrido de hoy». El magenta (`#A3157A`) marca **solo tu ruta**: lo que toca ahora, la acción principal y las prioridades. Así la atención va a un único lugar.
+- **Colores del mapa.** Papel claro (`#F5F6F1`) en lugar de blanco puro, verde bosque para lo logrado, marrón de curvas de nivel para rachas y alertas suaves, azul de agua para la información. Tiene modo oscuro con contraste revisado.
+- **Tipografías.** *Bricolage Grotesque* para títulos y números (con carácter, se lee bien en tamaños grandes). *Atkinson Hyperlegible Next* para el texto, diseñada para la máxima legibilidad (también para baja visión). Ambas tienen licencia OFL y van incluidas en `assets/fonts`, sin depender de Google Fonts.
+- **Celular primero.** Barra inferior con el botón **+** al centro (crear es lo más frecuente), hojas que suben desde abajo, objetivos táctiles de 44 px y sin desplazamiento horizontal (hay una prueba automática para eso). En la computadora: menú lateral y Hoy en dos columnas.
+- **Menos texto.** Cada pantalla muestra primero la decisión y deja los detalles un toque más allá. Los iconos son de Lucide (licencia ISC).
+
+## Estructura
+
+```
+index.html, manifest.webmanifest, sw.js      App, instalación y caché sin conexión
+css/brujula.css                              Sistema de diseño (claro/oscuro)
+js/app.js                                    Arranque, navegación y renderizado
+js/core/        modelo de datos, migración 3.9 → 4.0, almacenamiento y deshacer
+js/engine/      reglas, validador de horario, prioridades, repaso espaciado, alta rápida
+js/cloud/       Supabase: sesión, sincronización segura y conflictos
+js/views/       Hoy, Semana, Estudio, Curso, Sesión, Progreso, Vida, Ajustes, Acceso
+js/ui/          componentes (hojas, avisos, formularios, propuestas)
+js/features/    modos, avisos, push (beta), audio, tema, instalación
+js/assistant/   respuestas locales, Gemini y voz
+supabase/functions/brujula-ai/     Edge Function de Gemini (se despliega aparte)
+supabase/functions/brujula-push/   Edge Function de avisos push (opcional, beta)
+supabase/sql/                      SQL opcional de avisos push (instalar, programar, revertir, verificar)
+tests/                             pruebas unitarias, de punta a punta y de las funciones
+tools/                             lista de precaché del service worker y claves VAPID
+```
+
+No hay paso de compilación: los archivos se publican tal cual en GitHub Pages.
+
+## Integrar en el repositorio sin perder datos
+
+Sigue **[docs/INTEGRACION.md](docs/INTEGRACION.md)**: copia de seguridad, subida a GitHub, despliegue de la función de Gemini y reversión. Resumen: tus datos siguen en la misma tabla `brujula_user_state` con el mismo formato base (`version: 2`); la versión 4 solo **añade** campos y guarda una copia local antes de migrar.
+
+## Probar en tu computadora
+
+```bash
+python3 -m http.server 8080        # abre http://localhost:8080
+npm test                           # 27 pruebas unitarias (Node 20+)
+npm i -D playwright && npx playwright install chromium
+npm run test:e2e                   # 28 pruebas de punta a punta con Supabase simulado
+npm run test:edge                  # 38 pruebas de las funciones (requiere Bun; o test:edge:deno)
+npm run test:sql                   # 5 pruebas del SQL de avisos (requiere PostgreSQL local)
+```
+
+Detalle de lo probado y de lo que falta probar en real: [docs/PRUEBAS.md](docs/PRUEBAS.md).
 
 ## Privacidad y seguridad
-- GitHub Pages aloja solo el código público de la app; nunca publiques contraseñas ni archivos JSON con datos personales.
-- La clave `sb_publishable_` es pública por diseño; las claves `sb_secret_` y `service_role` son privadas y no deben incorporarse al repositorio.
-- Ejecuta el esquema `brujula_supabase.sql` en el proyecto Supabase para crear la tabla y activar las políticas RLS por `auth.uid()`.
-- **Antes de invitar terceros**, rota todas las credenciales administrativas que hayan sido compartidas anteriormente y verifica el aislamiento de cuentas con dos usuarios de prueba.
-- La aplicación almacena una copia local separada por identificador de cuenta; cierra sesión en dispositivos compartidos.
-- Exporta copias JSON periódicas. `Guardar en nube` puede reemplazar un estado remoto si así lo confirmas; revisa los avisos.
 
-## Publicación
-Este repositorio se publica con GitHub Pages desde la rama `main` y carpeta `/ (root)`. No se necesita servidor para la aplicación, pero el inicio de sesión y sincronización requieren una cuenta Supabase gratuita configurada.
+- El repositorio es público. Solo contiene la clave **publicable** de Supabase (`sb_publishable_…`), que es pública por diseño. La clave de Gemini, la `service_role` y los secretos VAPID viven en **Supabase → Edge Functions → Secrets**; nunca en el código.
+- Cada cuenta ve solo sus datos (RLS por `auth.uid()`). La copia local también se separa por cuenta. Al cerrar sesión puedes borrar la copia del dispositivo.
+- Gemini solo recibe tu horario si activas «Permitir enviar mi horario». Nunca recibe notas, diario ni contraseñas. En el nivel gratuito, Google puede usar lo que envías para mejorar sus productos.
+- Sin servicios de pago: GitHub Pages, Supabase Free y el nivel gratuito de Gemini.
 
-## Límites
-- No hay integración de modelos de IA por API, ni cobros adicionales por IA.
-- Cambiar código desde ChatGPT mediante GitHub **no** equivale a cambiar automáticamente los datos privados de usuarios.
-- La app no confirma en tiempo real las tareas de una persona: depende del registro voluntario.
-- Supabase Free y GitHub Pages tienen cuotas y condiciones de uso.
+## Límites conocidos
 
+- La sincronización usa el último guardado completo por cuenta. Si dos dispositivos editan sin conexión a la vez, Brújula no mezcla: te deja elegir qué copia conservar y guarda la otra.
+- Los avisos con la app totalmente cerrada solo funcionan después de desplegar el servidor opcional de push, y no se han probado con servicios de push reales (ver docs).
+- Dictado y conversación por voz dependen del navegador (Chrome, sobre todo). Las notas de voz se guardan solo en el dispositivo.
 
-## Brújula 3.1 — Audio y privacidad (2026)
-En **Horario → Abrir sesión → Audio de esta sesión**:
-- **Escuchar explicación** lee el tema utilizando la síntesis de voz del navegador; no necesita ninguna API pagada.
-- **Grabar nota** solicita permiso para usar el micrófono. Dura como máximo dos minutos, por cada bloque.
-- **Mi audio**, **Guardar archivo** y **Eliminar audio** permiten escuchar, descargar o borrar la nota.
-- Las notas de voz se guardan **solo en el dispositivo**, separadas por cuenta y bloque usando IndexedDB. **No** se sincronizan con Supabase ni forman parte de la copia JSON. En dispositivos compartidos no representan cifrado frente a otros usuarios del sistema operativo.
-- Para escuchar o grabar en Chrome, usar el sitio HTTPS de GitHub Pages. El navegador puede exigir permiso de micrófono.
-
-En **Nube y datos → Comprobar acceso privado** hay una prueba de solo lectura que busca filas de otras cuentas. Si devuelve filas ajenas, hay una filtración y hay que detener el uso compartido. Si no devuelve filas, **no demuestra por sí sola** que RLS esté correctamente configurado.
-
-Para auditar políticas de Supabase, ejecutar el archivo **VERIFICAR_AISLAMIENTO.sql** (solo lectura) en SQL Editor. Probar después la aplicación con **dos cuentas diferentes**. El informe completo de aislamiento de producción sigue pendiente hasta esas pruebas.
-
-### Sobre escribir desde ChatGPT directamente en Supabase
-Actualizar código desde el plugin GitHub es distinto de modificar información privada. Para autorizar la escritura directa de planes en Supabase, conectar una integración dedicada a Supabase en ChatGPT, con acceso limitado al proyecto y permisos adecuados. No publicar nunca claves administrativas en el HTML, GitHub o conversaciones. Esta integración aún no está habilitada ni verificada y la escritura directa de ChatGPT en los horarios no está activa. La importación revisada de JSON continúa disponible.
-
-## Funciones 3.5
-- **Bienestar → Mi rutina y mis descansos:** guarda horas de despertar/dormir, comida y separación entre actividades por cuenta en Supabase mediante el estado del usuario.
-- **Mi horario:** avisa de actividades que se superponen y permite deshacer una reprogramación reciente cuando no existe un nuevo choque.
-- **Pendientes → Buscar otro momento:** encuentra un hueco respetando preferencias, otras actividades y descansos; nunca guarda una propuesta sin aprobación. Clases, exámenes y actividades dominadas quedan protegidos.
-- **Bienestar → Activar avisos:** recordatorios con notificaciones del navegador unos cinco minutos antes. **Solo mientras la página permanezca abierta** y con permiso. No existen push en segundo plano.
-- **Mi asistente:** chat guiado local para horario, tareas pendientes, cruces y descanso. Admite dictado y lectura del resultado si el navegador soporta Web Speech. **No es un chat con un modelo de IA** ni puede contestar preguntas académicas abiertas.
-- Las opciones de solicitudes para ChatGPT / Supabase permanecen en **Opciones avanzadas**, con propuesta y aprobación manual.
-
-### Por comprobar antes de uso grupal
-- Una solicitud real de ChatGPT en Supabase, con la persona aprobándola desde la app.
-- Prueba de alta, sesión y recuperación con dos cuentas reales y dos navegadores distintos; las políticas de aislamiento RLS ya se probaron con identidades simuladas a nivel de base de datos.
-- Permisos de notificaciones y dictado en Chrome móvil / escritorio.
-- Los complementos 3.5 son mejoras funcionales probadas en navegador simulado. No se ha comprobado el despliegue activo de GitHub Pages desde un navegador del usuario.
-
-### No implementado todavía
-- Chat abierto de IA generativa dentro de Brújula y conversación libre por voz. Esto requiere una conexión autorizada, un backend protegido, controles de privacidad y posibles costes por uso. Una suscripción personal ChatGPT Plus no permite usarla como API compartida.
-- Notificaciones push mientras el navegador está cerrado.
-- Aprendizaje automático con seguimiento autónomo de la persona, procesamiento de PDF y tarjetas inteligentes a partir de documentos.
-
-
-## Brújula 3.9 · Tres modos, una pantalla sencilla
-
-Selector visible sobre **Mi semana**: **✨ Mixto**, **✓ Preguntar**, **⚡ Automático**.
-La primera vez se usa **Preguntar**: nada se mueve automáticamente sin que el usuario active otro modo. El modo se guarda dentro de sus preferencias personales de Brújula y se sincroniza en su cuenta a través del guardado existente.
-
-- **Mixto:** al marcar una actividad personal como **No realizada**, Brújula busca otro espacio y la mueve. Cuando marcas un tema de estudio como **Repasar**, añade un nuevo bloque de repaso de 25 minutos. Para estudio no realizado, pregunta antes de moverlo.
-- **Preguntar:** solicita confirmación individual para mover una tarea marcada como no realizada o crear una sesión de repaso.
-- **Automático:** al marcar una actividad flexible como **No realizada**, la reprograma. Al marcar una sesión como **Repasar**, añade otro bloque de repaso automáticamente. Los cambios usan reglas locales y no generan gasto en la API de Gemini.
-- **Siempre:** clases y exámenes son inamovibles, se protegen los estados dominados, se respetan sueño, almuerzo y separación entre bloques. Se mantiene **↶ Deshacer** para el último movimiento o repaso programado. Si no hay espacio libre, no se hace el cambio.
-- **Pendientes:** botón corto **No hice** para registrar una tarea no realizada. No se interpreta como no realizada solo por haber llegado su hora; se necesita acción humana.
-- **Gemini:** sus propuestas dentro del globo flotante siguen necesitando vista previa y confirmación, incluso con modo Automático. Los modos automáticos son un planificador local, no un agente que modifica el calendario desde el servidor cuando la app está cerrada.
-- **Recordatorios:** ya existen avisos locales con la página abierta; la notificación push con Brújula cerrada se desarrollará después.
-
-## Versión 3.8 · Globo de Gemini en el horario
-- Después de entrar a tu cuenta, pulsa **✦ Mi asistente** abajo a la derecha. Se abre una ventana pequeña sobre el horario (en móvil, panel adaptado).
-- El chat Gemini se mantiene dentro de ese globo; **Mi asistente** ofrece la guía por reglas y acceso al globo.
-- Para consejos académicos, escribe la pregunta, acepta el envío a Gemini y pulsa **Enviar pregunta**. Tu horario no se comparte salvo que marques la opción.
-- Para reorganizar actividades, escribe por ejemplo *No pude estudiar Física; busca un nuevo espacio mañana por la tarde*. Marca las autorizaciones necesarias y pulsa **📅 Proponer cambio**.
-- Gemini devuelve únicamente una propuesta. Brújula valida el ID de las actividades, prohíbe borrados, protege clases/exámenes y actividades dominadas, busca choques, y comprueba sueño, almuerzo y el descanso entre actividades. Si falla una comprobación, no se permite aplicar.
-- Revisa la lista y pulsa **✓ Revisar y aplicar**. A continuación aparece la confirmación explícita del navegador; solo después se modifica tu horario y se sincroniza a tu cuenta.
-- El modo de propuesta permite **hasta tres** cambios por petición. No es reprogramación silenciosa ni instantánea. Usa la misma cuota gratuita de Gemini que el chat.
-- Si Gemini necesita detalles, puede pedir una aclaración sin generar cambios.
-- Las propuestas aún deben probarse con sesiones reales y con un cambio pequeño. No compartas credenciales ni información de otros usuarios.
-- El globo se oculta si cierras sesión y no mantiene propuestas de una cuenta al cambiar de usuario.
-
-## Brújula 3.7: hablar con el tutor
-
-La sección **Mi asistente** ahora incluye dos opciones:
-
-- **🎙 Conversar por voz:** pulsa el botón, concede acceso al micrófono y formula una pregunta. El navegador transcribe la voz, el chat Gemini responde y el navegador lee la respuesta. Al terminar puede volver a escuchar la siguiente pregunta. **⏹ Detener conversación** interrumpe el micrófono y el audio.
-- **🎤 Dictar pregunta:** convierte una intervención hablada en texto, pero espera a que la persona revise el mensaje y pulse **Enviar pregunta**. No envía automáticamente.
-- **🔊 Escuchar:** sigue disponible para leer manualmente la última respuesta.
-- Requiere una cuenta de Brújula iniciada, consentimiento marcado para consultas Gemini, HTTPS, micrófono permitido, y navegador con reconocimiento de voz (en Chrome normalmente se expone como `webkitSpeechRecognition`).
-- El reconocimiento de voz puede usar servicios externos del navegador y transmitir audio para transcribir; la app no guarda grabaciones. La transcripción se envía a Gemini para la respuesta solo con el consentimiento ya definido.
-- La conversación de voz consume **las mismas 15 consultas diarias por usuario / 100 globales** de Gemini; no tiene cuota separada.
-- No afirma funcionar en todos los navegadores. Si no existe SpeechRecognition, dictado y conversación por voz se deshabilitan, pero el chat escrito y la lectura de respuestas permanecen.
-- Se probó la sintaxis y la presencia de los controles en el repositorio. **Todavía se requiere una prueba manual en Chrome real con permiso de micrófono**, ya que la captura de audio necesita interacción del usuario.
-- La voz no cambia el horario: solo propone orientación. Los cambios continúan requiriendo aprobación.
-
-## Chat con Gemini API (desde Brújula 3.6)
-
-El chat usa **Gemini 2.5 Flash-Lite**, invocado exclusivamente desde la función protegida `brujula-ai` de Supabase. No escribas la clave Gemini en `index.html`, scripts o GitHub.
-
-1. En [Google AI Studio](https://aistudio.google.com/api-keys), crea una clave API en un proyecto con el **nivel gratuito**, sin habilitar facturación.
-2. Abre Supabase Dashboard → Edge Functions → Secrets (secretos del proyecto).
-3. Guarda un secreto con nombre exacto `GEMINI_API_KEY` y valor tu clave. **No la envíes en una conversación ni la publiques en GitHub**.
-4. Abre Brújula, inicia sesión y entra en **Mi asistente**. Acepta el aviso de privacidad y escribe una pregunta.
-5. Si aparece un 429, se agotó la cuota del usuario/proyecto o hay demasiadas peticiones; espera al restablecimiento. En la prueba los máximos locales son **15 consultas al día por usuario, 100 globales al día, y una consulta cada ocho segundos**.
-
-### Seguridad
-- La Edge Function requiere una sesión JWT válida y confirma identidad con Supabase Auth.
-- La tabla `brujula_ai_usage` y la tabla de cuota global están protegidas; la función SQL `brujula_ai_take_turn()` limita consumos de usuarios autenticados.
-- El HTML nunca obtiene la clave de Gemini. Los usuarios deben dar su consentimiento antes de transmitir cada conversación; compartir el horario es opcional y desactivado por defecto.
-- Gemini en el nivel gratuito puede usar los datos enviados para mejorar sus productos. No compartas información sensible, contraseñas ni datos de terceros.
-- El chat puede asesorar pero no actualiza directamente las actividades. La aplicación conserva el mecanismo de aprobación explícita.
-- **No está comprobada una respuesta exitosa real de Gemini hasta configurar la clave API.** Las cuotas reales de Google pueden ser inferiores o diferentes a los topes de Brújula. No funciona con la página cerrada y no incorpora PDFs todavía.
+Tipografías: Bricolage Grotesque y Atkinson Hyperlegible Next (licencia OFL). Iconos: Lucide (licencia ISC).
