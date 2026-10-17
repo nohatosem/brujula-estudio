@@ -44,7 +44,7 @@ export function draftDailyRoutine(state, templates, {
     (state.courses||[]).find(c=>c.id==='vida')?.id||'vida';
   const from=startDate<todayISO(now)?todayISO(now):startDate;
   const until=plusMonths(from,months);
-  const draft=[...state.blocks],items=[],skipped=[],series=new Map(active.map(t=>[t.id,gid()]));
+  const draft=[...state.blocks],items=[],skipped=[],adjusted=[],series=new Map(active.map(t=>[t.id,gid()]));
   let totalDays=0;
   for(let d=from;d<=until;d=addDays(d,1)){
     if(++totalDays>135)break;
@@ -57,10 +57,27 @@ export function draftDailyRoutine(state, templates, {
         kind:'personal',status:'scheduled',difficulty:1,priority:'normal',
         semesterFixed:true,origin:'daily-routine',routineKey:t.id,
         seriesId:series.get(t.id),seriesUntil:until,...(t.habitId?{habitId:t.habitId}:{})});
-      const issues=violations({blocks:draft,rules:r,now},{date:d,start:toMin(b.start),end:toMin(b.end),kind:'personal'});
-      if(issues.length){skipped.push({date:d,title:t.title,why:issues.join(', ')});continue;}
+      let issues=violations({blocks:draft,rules:r,now},{date:d,start:toMin(b.start),end:toMin(b.end),kind:'personal'});
+      if(issues.length){
+        // Mantener la rutina diaria buscando una alternativa en la misma mañana/tarde.
+        // Nunca trasladamos clases ni dejamos que una comida invada almuerzo o sueño.
+        const duration=toMin(b.end)-toMin(b.start);
+        const windowEnd=t.when==='morning'?Math.min(r.lunch[0],12*60):r.sleep;
+        const startAt=Math.max(t.when==='morning'?r.wake:Math.max(r.lunch[1],18*60),toMin(b.start));
+        let moved=false;
+        for(let minute=Math.ceil(startAt/15)*15;minute+duration<=windowEnd;minute+=15){
+          const v=violations({blocks:draft,rules:r,now},
+            {date:d,start:minute,end:minute+duration,kind:'personal'});
+          if(!v.length){
+            b.start=toHHMM(minute);b.end=toHHMM(minute+duration);
+            adjusted.push({date:d,title:t.title,start:b.start,end:b.end});
+            moved=true;break;
+          }
+        }
+        if(!moved){skipped.push({date:d,title:t.title,why:issues.join(', ')});continue;}
+      }
       draft.push(b);items.push(b);
     }
   }
-  return {items,skipped,totalDays,until,from,activeCount:active.length};
+  return {items,skipped,adjusted,totalDays,until,from,activeCount:active.length};
 }
