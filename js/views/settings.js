@@ -76,6 +76,7 @@ export function render(c) {
     </div></section>
 
     <section class="set-group" id="ia"><h2>Asistente y privacidad</h2><div class="set-card">
+      <div class="set-pad"><p class="small muted">ChatGPT (beta): usa el proyecto Supabase conectado a esta conversación. No necesitas copiar todo tu horario; tú mismo abres ChatGPT para procesar la solicitud. No es una API automática.</p><div class="hstack"><button type="button" class="btn btn-sm btn-soft" data-act="request-ai-plan">Preparar solicitud ChatGPT</button><button type="button" class="btn btn-sm" data-act="load-ai-plan">Ver propuesta recibida</button></div></div>
       <label class="switch set-row"><span class="txt"><b>Usar Gemini</b><small>Tus mensajes se envían a Google a través de tu función segura de Supabase. En el nivel gratuito, Google puede usarlos para mejorar sus productos.</small></span><input type="checkbox" data-change="ai-consent" ${p.aiConsent ? 'checked' : ''}></label>
       <label class="switch set-row"><span class="txt"><b>Permitir enviar mi horario</b><small>Necesario para analizar tu semana o proponer cambios. Nunca se envían notas, diario ni contraseñas.</small></span><input type="checkbox" data-change="ai-share" ${p.aiShareSchedule ? 'checked' : ''} ${p.aiConsent ? '' : 'disabled'}></label>
       <label class="switch set-row"><span class="txt"><b>Asistente directo (beta)</b><small>Dile tu horario una sola vez. Podrá guardar rutinas de 4 meses y cambios seguros sin pedir «Aplicar» cada vez. Deshacer sigue disponible. Gemini necesita los permisos anteriores.</small></span><input type="checkbox" data-change="ai-direct" ${p.aiDirect ? 'checked' : ''}></label>
@@ -106,7 +107,7 @@ export function render(c) {
       <button type="button" class="set-row" data-act="chatgpt-import">${icon('file-braces')}<span class="txt"><b>Pegar propuesta JSON de ChatGPT</b><small>Brújula la verifica y te muestra los cambios antes de aplicarlos.</small></span></button>
       <button type="button" class="set-row" data-act="copy-schedule-prompt">${icon('copy')}<span class="txt"><b>Copiar mi horario para ChatGPT</b><small>Incluye cursos y actividades recientes (no tu diario).</small></span></button>
       <button type="button" class="set-row" data-act="copy-plan-template">${icon('wand-sparkles')}<span class="txt"><b>Crear mi horario con ChatGPT</b><small>Copia instrucciones para que te devuelva un JSON importable.</small></span></button>
-      <button type="button" class="set-row" data-act="request-ai-plan">${icon('link')}<span class="txt"><b>Solicitud temporal para ChatGPT (Supabase)</b><small>Crea un código; la propuesta vuelve aquí para tu aprobación.</small></span></button>
+      <button type="button" class="set-row" data-act="request-ai-plan">${icon('link')}<span class="txt"><b>Solicitar ayuda de ChatGPT (beta)</b><small>Guarda el contexto privado en Supabase, sin copiar el horario.</small></span></button>
       <button type="button" class="set-row" data-act="load-ai-plan">${icon('cloud')}<span class="txt"><b>Consultar propuesta de la nube</b></span></button>
       <button type="button" class="set-row" data-act="privacy-check">${icon('shield-check')}<span class="txt"><b>Comprobar acceso privado</b><small>Prueba de solo lectura contra filas de otras cuentas.</small></span></button>
       <button type="button" class="set-row" data-act="custom-config">${icon('sliders-horizontal')}<span class="txt"><b>Proyecto Supabase</b><small>${usingCustomConfig() ? 'Usando un proyecto propio' : 'Conexión pública de Brújula'}</small></span>${icon('chevron-right', 'sm')}</button>
@@ -260,19 +261,7 @@ action('chatgpt-import', () => {
     onMount(card) { card.querySelector('[data-ok]').addEventListener('click', () => { const v = card.querySelector('#jsonIn').value; if (reviewJSONProposal(v)) s.close(); }); },
   });
 });
-action('request-ai-plan', async () => {
-  if (!cloud.user) return;
-  try {
-    const client = await getClient();
-    const s = store.state;
-    const snapshot = { version: 1, createdAt: new Date().toISOString(), courses: s.courses.map((c) => ({ id: c.id, name: c.name })), blocks: s.blocks.map((b) => ({ id: b.id, course: courseOf(s, b.courseId).name, date: b.date, start: b.start, end: b.end, title: b.title, goal: b.goal || '', status: b.status, kind: b.kind, priority: b.priority, difficulty: b.difficulty })) };
-    const { data, error } = await client.from('brujula_assistant_requests').insert({ user_id: cloud.user.id, schedule_snapshot: snapshot }).select('id,expires_at').single();
-    if (error) throw error;
-    const msg = 'Brújula: prepara cambios a mi horario. Código temporal de solicitud: ' + data.id + '. No modifiques actividades dominadas ni clases fijas ni suprimas bloques sin mi permiso. Revisa los cruces y prioriza el descanso. Consulta esa solicitud en mi Supabase conectado y guarda una PROPUESTA para que yo la apruebe en la aplicación; no alteres directamente el estado de mi horario.';
-    await copyText(msg);
-    toast(`Solicitud creada (expira ${new Date(data.expires_at).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}). Mensaje copiado para ChatGPT.`, { tone: 'ok', duration: 7000 });
-  } catch (e) { toast('No se pudo crear la solicitud: ' + (e.message || e), { tone: 'warn' }); }
-});
+action('request-ai-plan', async () => { try{ const m=await import('../features/chatgpt-bridge.js'); await m.requestChatGPT('Ayúdame a organizar mi horario en Brújula priorizando mis cursos y descansos.'); }catch(e){toast(e.message,{tone:'warn'});} });
 action('load-ai-plan', async () => {
   if (!cloud.user) return;
   try {
