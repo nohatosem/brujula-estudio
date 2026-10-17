@@ -2,20 +2,23 @@
 // y propuestas validadas) + voz. Las conversaciones son temporales y por cuenta.
 
 import { esc, cut, norm, plural } from '../core/util.js';
-import { store, subscribe, commit } from '../core/store.js';
+import { store, subscribe, commit, change } from '../core/store.js';
 import { prefs, courseOf } from '../core/model.js';
 
 import { computeFocus, upcomingEvaluations } from '../engine/priority.js';
 import { icon } from '../ui/icons.js';
 
 import { toast } from '../ui/feedback.js';
-import { openProposal } from '../ui/proposal.js';
+import { openProposal, applyOps } from '../ui/proposal.js';
+import { stillApplicable } from '../engine/scheduler.js';
+import { draftRecurring } from '../engine/recurrence.js';
+import { undoToast } from '../features/undo-toast.js';
 import { localReply, localAnalysis } from './local.js';
 import { chat, scheduleAI, quota } from './gemini.js';
 import { configureVoice, listen, startConversation, stopVoice, speakAndContinue, voiceState, canListen } from './voice.js';
 import { cloud } from '../cloud/cloud.js';
 
-const st = { el: null, open: false, owner: null, feed: [], turns: [], proposals: [], busy: false, pending: null, context: null, lastFocus: null };
+const st = { el: null, open: false, owner: null, feed: [], turns: [], proposals: [], routinePlans: [], busy: false, pending: null, context: null, lastFocus: null };
 const ANALYZE = /(analiza|analisis|revisa mi (semana|horario|plan)|como (va|esta|ves) mi (semana|horario)|diagnostic|evalua mi|que (puedo )?mejor|optimiza|equilibr)/;
 const PLAN = /(organiza|reorganiza|planifica|programa(me|r)?|agenda(me|r)?|anade|agrega|crea(me)? (una |un )?(sesion|bloque|repaso|horario)|reprograma|mueve|cambia|pasa(lo|la)? .*(a|para) |libera|distribuye|arma(me)? (un )?(plan|horario)|ponme)/;
 export const classify = (text) => { const v = norm(text); return ANALYZE.test(v) ? 'analyze' : PLAN.test(v) ? 'plan' : 'chat'; };
@@ -81,7 +84,7 @@ function push(item) { st.feed.push(item); if (st.feed.length > 60) st.feed.shift
 
 function suggestions() {
   const s = store.state;
-  const out = [{ label: '¿Qué hago ahora?', icon: 'compass', say: '¿Qué hago ahora?' }, { label: 'Analiza mi semana', icon: 'gauge', say: 'Analiza mi semana' }, { label: 'Planifica mi semana', icon: 'wand-sparkles', say: 'Planifica mi semana' }];
+  const out = [{ label: '¿Qué hago ahora?', icon: 'compass', say: '¿Qué hago ahora?' }, { label: 'Analiza mi semana', icon: 'gauge', say: 'Analiza mi semana' }, { label: 'Planifica mi semana', icon: 'wand-sparkles', say: 'Planifica mi semana' }, { label: 'Rutina 4 meses', icon: 'calendar-range', say: 'Todos los lunes estudiar Física de 15:00 a 17:00 durante cuatro meses', fill: true }];
   const ev = upcomingEvaluations(s, new Date(), 14)[0];
   if (ev) out.push({ label: `Plan para ${cut(ev.title, 22)}`, icon: 'route', act: 'as-plan', id: ev.id });
   const f = computeFocus(s, new Date());
@@ -110,10 +113,60 @@ function paint() {
   const send = st.el.querySelector('.send'); if (send) send.disabled = st.busy;
 }
 
+// Rutina hablada: un solo cambio reversible puede generar 4 meses de sesiones.
+// Revalidamos antes de escribir; en automático solo actuamos tras permiso único.
+function saveRecurring(raw, savedAt = null) {
+  if (savedAt != null && Number(store.state.savedAt) !== Number(savedAt)) {
+    push({ who:'bot', src:'error', text:'Tu horario cambió desde la propuesta. Vuelve a dar la orden para recalcular.' }); return;
+  }
+  const plan = draftRecurring(raw, store.state, new Date());
+  if (!plan || plan.error) { push({who:'bot',src:'error',text:plan?.error||'No reconocí la rutina.'}); return; }
+  if (plan.kind === 'remove' && plan.ids.length > 126) { push({who:'bot',src:'error',text:'Demasiadas sesiones para retirar de una vez.'}); return; }
+  const touched = plan.ids || [];
+  const { entry } = change({
+    label:plan.message,type:'recurring',blockIds:touched,
+    mutate(state) {
+      if(plan.kind === 'add')state.blocks.push(...plan.items);
+      else if(plan.kind === 'remove')state.blocks=state.blocks.filter(b=>!touched.includes(b.id));
+      else if(plan.kind === 'move')for(const next of plan.items){
+        const b=state.blocks.find(x=>x.id===next.id); if(b)Object.assign(b,next);
+      }
+    },
+    event:{status:'progress',type:'recurring',title:'Rutina del semestre',course:'Brújula',reason:plan.message}
+  });
+  undoToast('Horario actualizado · Deshacer',entry);
+  push({who:'bot',src:'local',text:'✓ '+plan.message+' Puedes deshacer el cambio desde el aviso o en Semana.'});
+}
+function askRecurring(raw){
+  const plan=draftRecurring(raw,store.state,new Date());
+  if(!plan)return false;
+  if(plan.error){push({who:'bot',src:'local',text:plan.error});return true;}
+  if(prefs(store.state).aiDirect){saveRecurring(raw);return true;}
+  const idx=st.routinePlans.push({raw,at:store.state.savedAt})-1;
+  push({who:'bot',src:'local',text:plan.message+' ¿Lo guardo?',actions:[
+    {label:'Guardar rutina',act:'routine-apply',idx,primary:true,icon:'check'},
+    {label:'Permitir cambios directos',act:'direct-enable',idx,icon:'zap'}
+  ]});
+  return true;
+}
+
 function runAction(a, el) {
   if (!a) return;
   if (a.href) { closeAssistant(); return; }
   if (a.say) { void send(a.say); return; }
+  if (a.act === 'routine-apply') {
+    const r=st.routinePlans[a.idx]; if(r)saveRecurring(r.raw,r.at); return;
+  }
+  if (a.act === 'direct-enable') {
+    const { confirmSheet } = await import('../ui/feedback.js');
+    const ok=await confirmSheet({title:'Asistente directo',text:'¿Permitir que Brújula aplique sin preguntar cada cambio seguro que le pidas? Las clases, los exámenes y el descanso estarán protegidos frente a reprogramaciones automáticas.',confirm:'Permitir una vez'});
+    if(ok){
+      store.state.preferences={...prefs(store.state),aiDirect:true,aiDirectConsentAt:new Date().toISOString()};
+      commit();
+      const r=st.routinePlans[a.idx];if(r)saveRecurring(r.raw);
+    }
+    return;
+  }
   import('../features/actions.js').then(async (A) => {
     if (a.act === 'as-move') { closeAssistant(); await A.proposeMove(a.id); }
     else if (a.act === 'as-missed') { closeAssistant(); await A.setOutcome(a.id, 'missed'); }
@@ -151,6 +204,7 @@ export async function send(raw) {
   const text = String(raw || '').trim().slice(0, 1800);
   if (!text || st.busy) return;
   push({ who: 'me', text });
+  if(askRecurring(text))return;
   const local = localReply(text);
   if (local) {
     push({ who: 'bot', src: 'local', text: local.text, actions: local.actions || [] });
@@ -184,6 +238,21 @@ async function runAI(text, intent) {
       if (r.question && !r.validation.ops.length) { push({ who: 'bot', src: 'gemini', text: r.question }); speakAndContinue(r.question); }
       else {
         const v = r.validation;
+        if(intent === 'plan' && prefs(store.state).aiDirect && v.ops.length &&
+           !v.rejected.length && !v.warnings.length && v.ops.length<=5 &&
+           stillApplicable(store.state,v.ops)) {
+          const {entry}=change({
+            label:'Gemini: '+v.ops.length+' ajustes',type:'ai',
+            blockIds:v.ops.filter(op=>op.action!=='add').map(op=>op.id),
+            mutate:(state)=>applyOps(state,v.ops),
+            event:{status:'progress',type:'ai',title:'Cambio directo de Gemini',
+              course:'Mi horario',reason:'Petición explícita; modo directo autorizado'}
+          });
+          undoToast('Gemini actualizó '+v.ops.length+' actividades · Deshacer',entry);
+          push({who:'bot',src:'gemini',text:'✓ Hecho: '+v.ops.length+' cambios seguros guardados en tu horario. Puedes deshacerlos.'});
+          status(quotaText());
+          return;
+        }
         const idx = st.proposals.push(v) - 1;
         const parts = [];
         if (r.summary) parts.push(r.summary);
@@ -207,7 +276,7 @@ async function runAI(text, intent) {
 export function openAssistant({ prefill = '', autoSend = false, context = null } = {}) {
   if (!cloud.user) { toast('Inicia sesión para usar el asistente.'); return; }
   const el = ensure();
-  if (st.owner !== cloud.user.id) { st.owner = cloud.user.id; st.feed = []; st.turns = []; st.proposals = []; }
+  if (st.owner !== cloud.user.id) { st.owner = cloud.user.id; st.feed = []; st.turns = []; st.proposals = []; st.routinePlans = []; }
   st.context = context;
   st.lastFocus = document.activeElement;
   el.hidden = false;
@@ -232,7 +301,7 @@ export function closeAssistant() {
 
 export function initAssistant() {
   subscribe((reason) => {
-    if (reason === 'account') { closeAssistant(); st.feed = []; st.turns = []; st.proposals = []; st.owner = store.userId; }
+    if (reason === 'account') { closeAssistant(); st.feed = []; st.turns = []; st.proposals = []; st.routinePlans = []; st.owner = store.userId; }
     if (st.open) paint();
   });
   window.addEventListener('hashchange', () => { if (st.open) closeAssistant(); });
