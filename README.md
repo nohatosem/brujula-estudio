@@ -1,4 +1,4 @@
-# Brújula 3.8 — Calendario y asistente flotante
+# Brújula 3.9 — Calendario simple y modos inteligentes
 
 Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
 
@@ -83,6 +83,19 @@ Actualizar código desde el plugin GitHub es distinto de modificar información 
 - Notificaciones push mientras el navegador está cerrado.
 - Aprendizaje automático con seguimiento autónomo de la persona, procesamiento de PDF y tarjetas inteligentes a partir de documentos.
 
+
+## Brújula 3.9 · Tres modos, una pantalla sencilla
+
+Selector visible sobre **Mi semana**: **✨ Mixto**, **✓ Preguntar**, **⚡ Automático**.
+La primera vez se usa **Preguntar**: nada se mueve automáticamente sin que el usuario active otro modo. El modo se guarda dentro de sus preferencias personales de Brújula y se sincroniza en su cuenta a través del guardado existente.
+
+- **Mixto:** al marcar una actividad personal como **No realizada**, Brújula busca otro espacio y la mueve. Cuando marcas un tema de estudio como **Repasar**, añade un nuevo bloque de repaso de 25 minutos. Para estudio no realizado, pregunta antes de moverlo.
+- **Preguntar:** solicita confirmación individual para mover una tarea marcada como no realizada o crear una sesión de repaso.
+- **Automático:** al marcar una actividad flexible como **No realizada**, la reprograma. Al marcar una sesión como **Repasar**, añade otro bloque de repaso automáticamente. Los cambios usan reglas locales y no generan gasto en la API de Gemini.
+- **Siempre:** clases y exámenes son inamovibles, se protegen los estados dominados, se respetan sueño, almuerzo y separación entre bloques. Se mantiene **↶ Deshacer** para el último movimiento o repaso programado. Si no hay espacio libre, no se hace el cambio.
+- **Pendientes:** botón corto **No hice** para registrar una tarea no realizada. No se interpreta como no realizada solo por haber llegado su hora; se necesita acción humana.
+- **Gemini:** sus propuestas dentro del globo flotante siguen necesitando vista previa y confirmación, incluso con modo Automático. Los modos automáticos son un planificador local, no un agente que modifica el calendario desde el servidor cuando la app está cerrada.
+- **Recordatorios:** ya existen avisos locales con la página abierta; la notificación push con Brújula cerrada se desarrollará después.
 
 ## Versión 3.8 · Globo de Gemini en el horario
 - Después de entrar a tu cuenta, pulsa **✦ Mi asistente** abajo a la derecha. Se abre una ventana pequeña sobre el horario (en móvil, panel adaptado).
