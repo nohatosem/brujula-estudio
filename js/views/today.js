@@ -204,6 +204,7 @@ function todayDashboard(f,s){
   const remaining=pending.filter(b=>b.status!=='missed');
   const current=f.current || remaining.find(b=>toMin(b.start)<=now&&now<toMin(b.end));
   const next=remaining.find(b=>toMin(b.start)>now);
+  const overdue=remaining.find(b=>toMin(b.end)<=now);
   const missedTime=pending.filter(b=>toMin(b.end)<=now&&b.status!=='missed').length;
   const pendingHtml=pending.length?pending.slice(0,5).map(b=>{
     const past=toMin(b.end)<now&&b.status!=='missed';
@@ -215,13 +216,16 @@ function todayDashboard(f,s){
         '" data-status="mastered" title="Marcar como hecha" aria-label="Marcar '+esc(b.title)+' como hecho">'+icon('check')+'</button>':
         '<button type="button" class="focus-check" data-act="open-block" data-id="'+esc(b.id)+'" title="Abrir detalles" aria-label="Abrir detalles">'+icon('chevron-right')+'</button>')+
       '</div>';
-  }).join(''):'<p class="muted small">Sin actividades pendientes para hoy. Puedes añadir una.</p>';
+  }).join('')+(pending.length>5?'<a class="link small" href="#/semana">Ver todas las pendientes en Semana</a>':''):'<p class="muted small">Sin actividades pendientes para hoy. Puedes añadir una.</p>';
   let title='Tiempo disponible',desc='Aún no tienes una actividad marcada para esta hora.',action=
     '<button class="btn btn-sm btn-primary" data-act="quick-add">'+icon('plus','sm')+'Planificar algo</button>';
   if(current){
     title=current.title;desc='Ahora · '+current.start+'–'+current.end;
     action=current.kind==='study'?'<a class="btn btn-sm btn-primary" href="#/sesion/'+encodeURIComponent(current.id)+'">'+icon('play','sm')+'Empezar sesión</a>':
       '<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(current.id)+'">Ver actividad</button>';
+  }else if(overdue){
+    title=overdue.title;desc='Pendiente de revisar · estaba programado de '+overdue.start+' a '+overdue.end;
+    action='<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(overdue.id)+'">Revisar pendiente</button>';
   }else if(next){
     title=next.title;desc='Próximo · '+next.start+'–'+next.end;
     action='<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(next.id)+'">Ver próxima</button>';
