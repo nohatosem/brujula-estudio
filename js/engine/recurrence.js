@@ -96,7 +96,8 @@ export function draftRecurring(raw,state,now=new Date()){
  for(let date=from;date<=until;date=addDays(date,1)){
   if(!days.includes(weekdayIndex(date)))continue;
   if(date===from&&toMin(range.start)<now.getHours()*60+now.getMinutes())continue;
-  items.push(newBlock({...range,date,title,courseId,kind,
+  const habit=kind==='personal'?(state.habitDefs||[]).find(h=>norm(h.name)===norm(title)||norm(h.name).includes(norm(title))||norm(title).includes(norm(h.name))):null;
+  items.push(newBlock({...range,date,title,courseId,kind,...(habit?{habitId:habit.id}:{}),
     semesterFixed:true,seriesId:id,seriesUntil:until,seriesDays:days,origin:'routine-ai'}));
   if(items.length>126)return {error:'Hay demasiadas repeticiones. Divide la rutina en dos órdenes.'};
  }

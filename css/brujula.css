@@ -749,3 +749,25 @@ a.course-tag:hover { color: var(--ink); }
   .tabs.fill { max-width: 640px; }
   .settings { max-width: 780px; }
 }
+
+/* Brújula 4.2 — vista compacta de semana y próximos pasos */
+.mini-week {padding:8px 12px;display:flex;flex-direction:column;gap:2px}
+.mini-week-row{display:flex;align-items:flex-start;gap:12px;padding:9px 5px;border-bottom:1px solid var(--line-2);color:var(--ink);text-decoration:none;min-width:0}
+.mini-week-row:last-child{border-bottom:0}
+.mini-week-row:hover{background:var(--surface-2);border-radius:8px}
+.mini-day{min-width:54px;font-size:var(--fs-13);color:var(--ink-2);display:flex;justify-content:space-between;gap:5px}
+.mini-items{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.mini-activity{display:flex;align-items:center;gap:7px;min-width:0;font-size:var(--fs-13);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.mini-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--ink-3)}
+.mini-dot.done{background:var(--ok,#2d8b6d)}
+.mini-dot.personal{background:#ad8946}
+.mini-dot.study{background:var(--route,#9e3e76)}
+.mini-coming{display:flex;flex-direction:column;gap:0;padding:5px 13px}
+.mini-event{display:flex;align-items:center;gap:8px;padding:10px 2px;border:0;border-bottom:1px solid var(--line-2);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.mini-event:last-child{border-bottom:0}
+.mini-event:hover{background:var(--surface-2)}
+.mini-event b{font-size:var(--fs-14);font-weight:600;min-width:0;flex:1}
+.mini-time{font-size:var(--fs-13);color:var(--ink-2);white-space:nowrap;min-width:106px}
+.qa-ai-actions{padding-top:7px;border-top:1px solid var(--line-2)}
+.qa-ai-actions .btn{flex:1;min-width:135px}
+@media (max-width:480px){.mini-week-row{gap:7px}.mini-time{min-width:86px}.qa-ai-actions{flex-direction:column;align-items:stretch}.qa-ai-actions .btn{width:100%}}

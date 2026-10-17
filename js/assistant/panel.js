@@ -15,8 +15,9 @@ import { draftRecurring } from '../engine/recurrence.js';
 import { undoToast } from '../features/undo-toast.js';
 import { localReply, localAnalysis } from './local.js';
 import { chat, scheduleAI, quota } from './gemini.js';
-import { configureVoice, listen, startConversation, stopVoice, speakAndContinue, voiceState, canListen } from './voice.js';
+import { configureVoice, listen, startConversation, stopVoice, speakAndContinue, voiceState, canListen, testMicrophone } from './voice.js';
 import { cloud } from '../cloud/cloud.js';
+import { speak, canSpeak } from '../features/audio.js';
 
 const st = { el: null, open: false, owner: null, feed: [], turns: [], proposals: [], routinePlans: [], busy: false, pending: null, context: null, lastFocus: null };
 const ANALYZE = /(analiza|analisis|revisa mi (semana|horario|plan)|como (va|esta|ves) mi (semana|horario)|diagnostic|evalua mi|que (puedo )?mejor|optimiza|equilibr)/;
@@ -33,6 +34,7 @@ function ensure() {
   el.setAttribute('aria-labelledby', 'asTitle');
   el.innerHTML = `<header class="as-head"><h2 id="asTitle">${icon('sparkles')}Asistente</h2>
       <button type="button" class="icon-btn" data-as="talk" aria-pressed="false" aria-label="Conversar por voz" ${canListen() ? '' : 'hidden'}>${icon('headphones')}</button>
+      <button type="button" class="icon-btn" data-as="audio-test" aria-label="Probar micrófono y sonido" title="Probar audio">${icon('volume-2')}</button>
       <button type="button" class="icon-btn" data-as="clear" aria-label="Borrar conversación">${icon('trash')}</button>
       <button type="button" class="icon-btn" data-as="close" aria-label="Cerrar asistente">${icon('x')}</button></header>
     <div class="as-feed" id="asFeed" role="log" aria-live="polite" aria-label="Conversación"></div>
@@ -57,7 +59,12 @@ function ensure() {
       if (a === 'close') closeAssistant();
       else if (a === 'clear') { st.feed = []; st.turns = []; st.proposals = []; paint(); status('Conversación borrada.'); }
       else if (a === 'mic') { if (voiceState().phase === 'dictation') stopVoice(); else listen('dictation'); }
-      else if (a === 'talk') { if (voiceState().conversation) stopVoice('Conversación por voz detenida.'); else if (!prefs(store.state).aiConsent) { push({ who: 'bot', src: 'system', text: 'Para conversar por voz con Gemini primero autoriza su uso.', actions: [{ label: 'Permitir Gemini', act: 'consent' }] }); } else startConversation(); }
+      else if (a === 'talk') { if (voiceState().conversation) stopVoice('Conversación por voz detenida.'); else startConversation(); }
+      else if (a === 'audio-test') {
+        const sound=canSpeak()&&speak('Hola, este es el sonido de Brújula.');
+        status('Probando permiso del micrófono…');
+        testMicrophone().then(mic=>push({who:'bot',src:'local',text:(sound?'Sonido enviado. ':'La síntesis de voz no está disponible. ')+mic}));
+      }
       return;
     }
     const x = e.target.closest('[data-x]');

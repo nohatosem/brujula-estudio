@@ -6,7 +6,7 @@
 import { gid, norm, clone } from './util.js';
 import { todayISO, addDays, isValidDate, isValidTime, toMin, diffDays } from './dates.js';
 
-export const APP_VERSION = '4.1.0';
+export const APP_VERSION = '4.2.0';
 export const SCHEMA = 4;
 export const STATE_VERSION = 2;
 export const UNDO_LIMIT = 12;
