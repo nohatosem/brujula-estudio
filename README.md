@@ -35,3 +35,19 @@ Este repositorio se publica con GitHub Pages desde la rama `main` y carpeta `/ (
 - Cambiar código desde ChatGPT mediante GitHub **no** equivale a cambiar automáticamente los datos privados de usuarios.
 - La app no confirma en tiempo real las tareas de una persona: depende del registro voluntario.
 - Supabase Free y GitHub Pages tienen cuotas y condiciones de uso.
+
+
+## Brújula 3.1 — Audio y privacidad (2026)
+En **Horario → Abrir sesión → Audio de esta sesión**:
+- **Escuchar explicación** lee el tema utilizando la síntesis de voz del navegador; no necesita ninguna API pagada.
+- **Grabar nota** solicita permiso para usar el micrófono. Dura como máximo dos minutos, por cada bloque.
+- **Mi audio**, **Guardar archivo** y **Eliminar audio** permiten escuchar, descargar o borrar la nota.
+- Las notas de voz se guardan **solo en el dispositivo**, separadas por cuenta y bloque usando IndexedDB. **No** se sincronizan con Supabase ni forman parte de la copia JSON. En dispositivos compartidos no representan cifrado frente a otros usuarios del sistema operativo.
+- Para escuchar o grabar en Chrome, usar el sitio HTTPS de GitHub Pages. El navegador puede exigir permiso de micrófono.
+
+En **Nube y datos → Comprobar acceso privado** hay una prueba de solo lectura que busca filas de otras cuentas. Si devuelve filas ajenas, hay una filtración y hay que detener el uso compartido. Si no devuelve filas, **no demuestra por sí sola** que RLS esté correctamente configurado.
+
+Para auditar políticas de Supabase, ejecutar el archivo **VERIFICAR_AISLAMIENTO.sql** (solo lectura) en SQL Editor. Probar después la aplicación con **dos cuentas diferentes**. El informe completo de aislamiento de producción sigue pendiente hasta esas pruebas.
+
+### Sobre escribir desde ChatGPT directamente en Supabase
+Actualizar código desde el plugin GitHub es distinto de modificar información privada. Para autorizar la escritura directa de planes en Supabase, conectar una integración dedicada a Supabase en ChatGPT, con acceso limitado al proyecto y permisos adecuados. No publicar nunca claves administrativas en el HTML, GitHub o conversaciones. Esta integración aún no está habilitada ni verificada y la escritura directa de ChatGPT en los horarios no está activa. La importación revisada de JSON continúa disponible.
