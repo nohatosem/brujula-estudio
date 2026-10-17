@@ -8,7 +8,7 @@ import { rulesFrom } from './rules.js';
 
 export const isFixedKind = (k) => k === 'class' || k === 'exam';
 /** Protegido: clases, exámenes y sesiones dominadas no se mueven solas. */
-export const isLocked = (b) => !b || b.status === 'mastered' || isFixedKind(b.kind);
+export const isLocked = (b) => !b || b.status === 'mastered' || !!b.semesterFixed || isFixedKind(b.kind);
 export const isFlexible = (b) => !!b && !isLocked(b) && (b.kind === 'study' || b.kind === 'personal');
 
 export const overlap = (aS, aE, bS, bE, gap = 0) => aS < bE + gap && aE > bS - gap;
