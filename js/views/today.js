@@ -1,30 +1,25 @@
-// Brújula 4 · Hoy: qué hacer ahora, qué necesita tu decisión y qué es prioritario.
+// Brújula 4.2.4 · Hoy: un foco, una lista y una agenda semanal amplia.
 
 import { esc, cut, cap, plural } from '../core/util.js';
 import { device, notify } from '../core/store.js';
-import { courseOf, prefs, EVAL_TYPES } from '../core/model.js';
-import { fmtLong, fmtRelDay, fmtDuration, fmtIn, toMin, toHHMM, addDays, fmtRange } from '../core/dates.js';
+import { courseOf, prefs, EVAL_TYPES, isUsableBlock } from '../core/model.js';
+import { fmtLong, fmtIn, toMin, addDays, fmtRange, fmtShort, WEEKDAYS_SHORT } from '../core/dates.js';
 import { computeFocus } from '../engine/priority.js';
-import { isFixedKind } from '../engine/scheduler.js';
-import { habitStreak } from '../engine/insights.js';
 import { icon } from '../ui/icons.js';
 import { action } from '../ui/dom.js';
 import { go } from '../ui/router.js';
 import { cloud } from '../cloud/cloud.js';
 import { pwa, promptInstall, applyUpdate } from '../features/pwa.js';
-import { courseTag, kindChip, sectionHead, emptyState } from './common.js';
-import { setOutcome, proposeMove, toggleHabit, planExam, scheduleTopic, mode, modeDetail } from '../features/actions.js';
+import { courseTag, kindChip, sectionHead } from './common.js';
+import { setOutcome, proposeMove, toggleHabit, planExam, scheduleTopic } from '../features/actions.js';
 import { openDecisionsSheet, openQuickReview, openEvaluationDetail, openConflictSheet, openRoutineSheet } from '../ui/details.js';
 import { haptic } from '../core/util.js';
+import { activityCheck, activityNote, isFinished } from '../ui/activity-tools.js';
 
 export const title = () => 'Hoy';
 export const subtitle = (c) => cap(fmtLong(c.today));
 
-const TRIANGLE = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 5 L28.5 26.5 L3.5 26.5 Z" fill="var(--paper)" stroke="var(--route)" stroke-width="3" stroke-linejoin="round"/></svg>';
-const FINISH = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="var(--paper)" stroke="var(--route)" stroke-width="2.6"/><circle cx="16" cy="16" r="7.5" fill="none" stroke="var(--route)" stroke-width="2.6"/></svg>';
-
 function rumbo(f, s) {
-  const p = prefs(s);
   const nm = f.nowMin;
   const indexOf = (b) => f.todays.indexOf(b) + 1;
   if (f.current) {
@@ -37,7 +32,7 @@ function rumbo(f, s) {
         : `<button type="button" class="btn btn-lg" data-act="open-block" data-id="${esc(b.id)}">${icon('info')}Ver detalles</button>`;
     return `<section class="rumbo" aria-labelledby="rumboTitle">
       <div class="rumbo-control" aria-label="Control ${indexOf(b)} de ${f.todays.length}">${indexOf(b)}</div>
-      <div class="rumbo-top"><span class="rumbo-kicker"><span class="live" aria-hidden="true"></span>Ahora</span></div>
+      <div class="rumbo-top"><span class="rumbo-kicker"><span class="live" aria-hidden="true"></span>Tu rumbo ahora</span></div>
       <h2 class="rumbo-title" id="rumboTitle">${esc(b.title)}</h2>
       <div class="rumbo-meta"><span class="course-tag" style="--c:${esc(c.color)}">${esc(c.name)}</span>${kindChip(b)}<span class="chip"><time>${esc(fmtRange(b.start, b.end))}</time></span></div>
       ${b.goal ? `<p class="rumbo-goal">${esc(cut(b.goal, 160))}</p>` : ''}
@@ -48,18 +43,15 @@ function rumbo(f, s) {
   if (f.next) {
     const b = f.next, c = courseOf(s, b.courseId);
     const wait = f.minutesToNext;
-    const free = f.freeNow && f.freeNow.minutes >= 25 ? f.freeNow : null;
-    const top = f.priorities[0];
     const primary = b.kind === 'study' && wait <= 30
       ? `<a class="btn btn-primary btn-lg" href="#/sesion/${encodeURIComponent(b.id)}">${icon('play')}Empezar ya</a>`
       : `<button type="button" class="btn btn-lg" data-act="open-block" data-id="${esc(b.id)}">${icon('info')}Ver detalles</button>`;
     return `<section class="rumbo" aria-labelledby="rumboTitle">
       <div class="rumbo-control" aria-label="Control ${indexOf(b)} de ${f.todays.length}">${indexOf(b)}</div>
-      <div class="rumbo-top"><span class="rumbo-kicker">${icon('navigation', 'sm')}Siguiente · ${esc(fmtIn(wait))}</span></div>
+      <div class="rumbo-top"><span class="rumbo-kicker">${icon('compass', 'sm')}Tu rumbo ahora · ${esc(fmtIn(wait))}</span></div>
       <h2 class="rumbo-title" id="rumboTitle">${esc(b.title)}</h2>
       <div class="rumbo-meta"><span class="course-tag" style="--c:${esc(c.color)}">${esc(c.name)}</span>${kindChip(b)}<span class="chip"><time>${esc(fmtRange(b.start, b.end))}</time></span></div>
-      ${free && top ? `<div class="notice route">${icon('lightbulb')}<div>Tienes <b>${esc(fmtDuration(Math.min(free.minutes, wait - (f.rules.gap || 0))))}</b> libres antes. Lo más útil: <b>${esc(cut(top.title, 60))}</b>.</div></div>` : ''}
-      <div class="rumbo-actions">${primary}${free && top ? priorityButton(top, 'btn-lg') : ''}</div>
+      <div class="rumbo-actions">${primary}</div>
     </section>`;
   }
   if (f.dayOver) {
@@ -77,17 +69,17 @@ function rumbo(f, s) {
       <div class="rumbo-control" aria-hidden="true">${icon('locate-fixed')}</div>
       <div class="rumbo-top"><span class="rumbo-kicker">${icon('compass', 'sm')}Tu rumbo ahora</span></div>
       <h2 class="rumbo-title" id="rumboTitle">${esc(top.title)}</h2>
-      <div class="rumbo-meta">${courseTag(top.courseId)}${top.reasons.slice(0, 3).map((r) => `<span class="chip ${r.tone === 'urgent' ? 'urgent' : ''}">${esc(r.text)}</span>`).join('')}</div>
-      <p class="rumbo-goal">${f.freeNow ? `Tienes ${esc(fmtDuration(f.freeNow.minutes))} libres hoy.` : 'No queda nada programado hoy.'} Esto es lo que más te acerca a tus metas.</p>
+      <div class="rumbo-meta">${courseTag(top.courseId)}${top.reasons.slice(0, 1).map((r) => `<span class="chip ${r.tone === 'urgent' ? 'urgent' : ''}">${esc(r.text)}</span>`).join('')}</div>
+      <p class="rumbo-goal">Una sesión corta para seguir avanzando.</p>
       <div class="rumbo-actions">${priorityButton(top, 'btn-lg btn-primary')}<button type="button" class="btn btn-lg btn-quiet" data-act="quick-add">${icon('plus')}Otra cosa</button></div>
     </section>`;
   }
   return `<section class="rumbo calm" aria-labelledby="rumboTitle">
     <div class="rumbo-control" aria-hidden="true">${icon('sun')}</div>
-    <div class="rumbo-top"><span class="rumbo-kicker">${icon('compass', 'sm')}Día libre</span></div>
+    <div class="rumbo-top"><span class="rumbo-kicker">${icon('compass', 'sm')}Tu rumbo ahora</span></div>
     <h2 class="rumbo-title" id="rumboTitle">${s.blocks.length ? 'Nada pendiente hoy' : 'Empieza tu recorrido'}</h2>
     <p class="rumbo-goal">${s.blocks.length ? 'Descansar también es avanzar. Si quieres, planifica algo corto.' : 'Escribe una actividad como la dirías: «Repasar Física mañana 4pm». Yo busco el hueco.'}</p>
-    <div class="rumbo-actions"><button type="button" class="btn btn-primary btn-lg" data-act="quick-add">${icon('plus')}Planificar</button>${!s.courses.some((c) => !['general', 'vida'].includes(c.id)) ? `<a class="btn btn-lg" href="#/estudio">${icon('book-open')}Agregar mis cursos</a>` : ''}</div>
+    <div class="rumbo-actions"><button type="button" class="btn btn-primary btn-lg" data-act="quick-add">${icon('plus')}Añadir actividad</button>${!s.courses.some((c) => !['general', 'vida'].includes(c.id)) ? `<a class="btn btn-lg" href="#/estudio">${icon('book-open')}Agregar mis cursos</a>` : ''}</div>
   </section>`;
 }
 
@@ -98,46 +90,6 @@ function priorityButton(p, cls = 'btn-sm') {
   };
   const [ic, label] = map[p.action] || ['chevron-right', 'Ver'];
   return `<button type="button" class="btn ${cls}" data-act="prio" data-type="${esc(p.type)}" data-id="${esc(p.id)}" data-do="${esc(p.action)}">${icon(ic, 'sm')}${label}</button>`;
-}
-
-function decisionItem(b, today) {
-  const study = b.kind === 'study';
-  return `<li class="decide-item">
-    <div class="decide-top"><div class="grow"><button type="button" class="t" data-act="open-block" data-id="${esc(b.id)}" style="text-align:left"><b>${esc(b.title)}</b></button>
-      <div class="meta">${courseTag(b.courseId, { short: true })}<span>${esc(cap(fmtRelDay(b.date, today)))} · <time>${esc(b.start)}</time></span></div></div></div>
-    <div class="qa" role="group" aria-label="¿Cómo te fue con ${esc(b.title)}?">
-      <button type="button" class="ok" data-act="outcome" data-id="${esc(b.id)}" data-status="mastered">${icon('check')}${study ? 'Lo domino' : 'Hecho'}</button>
-      ${study ? `<button type="button" class="rev" data-act="outcome" data-id="${esc(b.id)}" data-status="review">${icon('rotate-ccw')}Repasar</button>` : ''}
-      <button type="button" class="no" data-act="outcome" data-id="${esc(b.id)}" data-status="missed">${icon('x')}No hice</button>
-    </div>
-  </li>`;
-}
-
-function courseLine(f, s) {
-  const r = f.rules;
-  const items = [];
-  const hh = (m) => toHHMM(Math.min(1439, m));
-  items.push(`<li class="cl cl-start"><span class="cl-mark">${TRIANGLE}</span><time>${hh(r.wake)}</time><span class="cl-body"><b>Salida</b></span><span></span></li>`);
-  let cursor = r.wake;
-  const now = f.nowMin;
-  f.todays.forEach((b, i) => {
-    const st = toMin(b.start), en = toMin(b.end);
-    const gapStart = Math.max(cursor, now);
-    if (st - gapStart >= 30 && st > now) {
-      items.push(`<li class="cl gap"><span class="cl-gap-label">${esc(fmtDuration(st - gapStart))} libres <button type="button" data-act="quick-add" data-date="${esc(f.today)}" data-start="${hh(Math.ceil((gapStart + (r.gap || 0)) / 5) * 5)}">${icon('plus', 'sm')}Añadir</button></span></li>`);
-    }
-    const isNow = f.current && f.current.id === b.id;
-    const done = b.status === 'mastered' || b.status === 'review';
-    const cls = [isNow ? 'now' : '', done ? 'done' : '', b.status === 'missed' ? 'missed' : '', isFixedKind(b.kind) ? 'fixed' : ''].join(' ');
-    const mark = done ? icon('check') : b.status === 'missed' ? icon('x', 'sm') : String(i + 1);
-    items.push(`<li class="cl ${cls}"><span class="cl-mark" aria-hidden="true">${mark}</span><time>${esc(b.start)}</time>
-      <button type="button" class="cl-body" data-act="open-block" data-id="${esc(b.id)}"><b>${esc(b.title)}</b><span class="meta">${courseTag(b.courseId, { short: true })}${kindChip(b)}${b.status === 'missed' ? '<span class="chip s-missed">No realizada</span>' : ''}${isNow ? '<span class="chip route">Ahora</span>' : ''}</span></button><span></span></li>`);
-    cursor = Math.max(cursor, en);
-  });
-  const tail = Math.max(cursor, now);
-  if (r.sleep - tail >= 45 && now < r.sleep) items.push(`<li class="cl gap"><span class="cl-gap-label">${esc(fmtDuration(r.sleep - tail))} libres <button type="button" data-act="quick-add" data-date="${esc(f.today)}" data-start="${hh(Math.ceil((tail + (r.gap || 0)) / 5) * 5)}">${icon('plus', 'sm')}Añadir</button></span></li>`);
-  items.push(`<li class="cl cl-finish"><span class="cl-mark">${FINISH}</span><time>${hh(r.sleep)}</time><span class="cl-body"><b>Descanso</b></span><span></span></li>`);
-  return `<ol class="course-line" aria-label="Recorrido de hoy">${items.join('')}</ol>`;
 }
 
 function evalCards(f) {
@@ -152,15 +104,6 @@ function evalCards(f) {
     </button>`).join('')}</div></section>`;
 }
 
-function habitsToday(s, today) {
-  const defs = (s.habitDefs || []).filter((h) => h.active !== false);
-  if (!defs.length) return '';
-  const done = s.habits[today] || {};
-  const count = defs.filter((h) => done[h.id]).length;
-  return `<section class="section">${sectionHead('Hábitos de hoy', { link: '#/habitos', linkLabel: `${count}/${defs.length}` })}
-    <div class="habit-row">${defs.map((h) => { const on = !!done[h.id]; const streak = habitStreak(s, h.id, today); return `<button type="button" class="habit-pill" aria-pressed="${on}" data-act="habit" data-habit="${esc(h.id)}" data-date="${esc(today)}">${icon(on ? 'circle-check' : h.icon || 'circle')}${esc(h.name)}${streak > 1 ? `<span class="streak">${icon('flame', 'sm')}${streak}</span>` : ''}</button>`; }).join('')}</div></section>`;
-}
-
 function banners(s) {
   const out = [];
   const dev = device.get();
@@ -172,112 +115,67 @@ function banners(s) {
 }
 
 
-function comingSoon(s,today){
-  const rows=s.blocks.filter(b=>b.date>=today&&b.status!=='mastered'&&b.status!=='review')
-    .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)).slice(0,4);
-  if(!rows.length)return '';
-  return '<section class="section">'+sectionHead('Después viene', {link:'#/semana',linkLabel:'Ver semana'})+
-    '<div class="panel mini-coming">'+rows.map(b=>'<button type="button" class="mini-event" data-act="open-block" data-id="'+esc(b.id)+'">'+
-    '<span class="mini-dot '+(b.kind==='personal'?'personal':'study')+'"></span><span class="mini-time">'+
-    esc(fmtRelDay(b.date,today))+' '+esc(b.start)+'</span><b>'+esc(cut(b.title,58))+'</b></button>').join('')+'</div></section>';
-}
-function miniWeek(s,today){
-  const dates=Array.from({length:7},(_,i)=>addDays(today,i));
-  const titles=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  return '<section class="section">'+sectionHead('Mi semana', {link:'#/semana',linkLabel:'Abrir horario'})+
-    '<div class="panel mini-week">'+dates.map(d=>{
-      const day=new Date(d+'T12:00:00').getDay();
-      const blocks=s.blocks.filter(b=>b.date===d).sort((a,b)=>a.start.localeCompare(b.start));
-      return '<a class="mini-week-row" href="#/semana/'+d+'"><span class="mini-day">'+titles[day]+' <b>'+Number(d.slice(8))+'</b></span><span class="mini-items">'+
-      (blocks.length?blocks.slice(0,3).map(b=>'<span class="mini-activity"><i class="mini-dot '+(b.status==='mastered'||b.status==='review'?'done':b.kind==='personal'?'personal':'study')+'"></i>'+esc(b.start)+' '+esc(cut(b.title,23))+'</span>').join(''):'<span class="muted">Libre</span>')+
-      (blocks.length>3?'<span class="small muted">+'+(blocks.length-3)+'</span>':'')+
-      '</span></a>';
-    }).join('')+'</div></section>';
+function activityItem(b, {now = null, compact = false} = {}) {
+  const done = isFinished(b);
+  const pendingReview = now != null && !done && toMin(b.end) <= now && b.status !== 'missed';
+  const note = String(b.notes || '').trim();
+  return `<div class="agenda-activity ${done ? 'is-done' : ''} ${compact ? 'compact' : ''}">
+    ${activityCheck(b)}
+    <button type="button" class="agenda-activity-body" data-act="open-block" data-id="${esc(b.id)}">
+      <span class="agenda-activity-time"><time>${esc(fmtRange(b.start, b.end))}</time>${pendingReview ? '<span>Por confirmar</span>' : b.status === 'missed' ? '<span>No realizada</span>' : ''}</span>
+      <b>${esc(b.title)}</b>
+      ${note ? `<span class="agenda-activity-note">${esc(cut(note, 180))}</span>` : ''}
+    </button>
+    ${activityNote(b)}
+  </div>`;
 }
 
+function todayPending(f) {
+  const pending = f.todays.filter(b => !isFinished(b));
+  const done = f.todays.filter(isFinished);
+  const older = f.decisions.filter(b => b.date < f.today);
+  const rows = pending.slice(0, 5).map(b => activityItem(b, {now:f.nowMin})).join('');
+  return `<section class="panel today-pending" aria-labelledby="pendingTitle">
+    <div class="section-head"><h2 id="pendingTitle">Hoy pendiente <span class="count-badge">${pending.length}</span></h2>
+      <button type="button" class="icon-btn" data-act="quick-add" aria-label="Añadir actividad">${icon('plus', 'sm')}</button></div>
+    ${pending.length ? rows : '<p class="today-empty">Todo al día. Tienes espacio para descansar.</p>'}
+    ${pending.length > 5 ? `<details class="today-more"><summary>Ver ${pending.length - 5} más</summary>${pending.slice(5).map(b => activityItem(b, {now:f.nowMin})).join('')}</details>` : ''}
+    ${done.length ? `<details class="today-more completed-activities"><summary>${done.length} ${done.length === 1 ? 'actividad hecha' : 'actividades hechas'}</summary>${done.map(b => activityItem(b)).join('')}</details>` : ''}
+    ${older.length ? `<button type="button" class="link today-older" data-act="all-decisions">Revisar ${plural(older.length, 'actividad anterior', 'actividades anteriores')}</button>` : ''}
+  </section>`;
+}
 
-/** Dos tarjetas accionables, sin marcar como incumplido solo porque pasó la hora. */
-function todayDashboard(f,s){
-  const now=f.nowMin;
-  const pending=f.todays.filter(b=>!['mastered'].includes(b.status))
-    .sort((a,b)=>toMin(a.start)-toMin(b.start));
-  const remaining=pending.filter(b=>b.status!=='missed');
-  const current=f.current || remaining.find(b=>toMin(b.start)<=now&&now<toMin(b.end));
-  const next=remaining.find(b=>toMin(b.start)>now);
-  const overdue=remaining.find(b=>toMin(b.end)<=now);
-  const missedTime=pending.filter(b=>toMin(b.end)<=now&&b.status!=='missed').length;
-  const pendingHtml=pending.length?pending.slice(0,5).map(b=>{
-    const past=toMin(b.end)<now&&b.status!=='missed';
-    const kind=b.kind==='study'||b.kind==='personal';
-    return '<div class="focus-item"><span class="focus-item-time">'+esc(b.start)+'</span>'+
-      '<div class="focus-item-body"><b>'+esc(cut(b.title,55))+'</b><small>'+
-      (past?'Hora pasada · aún sin confirmar':b.status==='missed'?'No realizada':'Programada')+'</small></div>'+
-      (kind?'<button type="button" class="focus-check" data-act="outcome" data-id="'+esc(b.id)+
-        '" data-status="mastered" title="Marcar como hecha" aria-label="Marcar '+esc(b.title)+' como hecho">'+icon('check')+'</button>':
-        '<button type="button" class="focus-check" data-act="open-block" data-id="'+esc(b.id)+'" title="Abrir detalles" aria-label="Abrir detalles">'+icon('chevron-right')+'</button>')+
-      '</div>';
-  }).join('')+(pending.length>5?'<a class="link small" href="#/semana">Ver todas las pendientes en Semana</a>':''):'<p class="muted small">Sin actividades pendientes para hoy. Puedes añadir una.</p>';
-  let title='Tiempo disponible',desc='Aún no tienes una actividad marcada para esta hora.',action=
-    '<button class="btn btn-sm btn-primary" data-act="quick-add">'+icon('plus','sm')+'Planificar algo</button>';
-  if(current){
-    title=current.title;desc='Ahora · '+current.start+'–'+current.end;
-    action=current.kind==='study'?'<a class="btn btn-sm btn-primary" href="#/sesion/'+encodeURIComponent(current.id)+'">'+icon('play','sm')+'Empezar sesión</a>':
-      '<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(current.id)+'">Ver actividad</button>';
-  }else if(overdue){
-    title=overdue.title;desc='Pendiente de revisar · estaba programado de '+overdue.start+' a '+overdue.end;
-    action='<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(overdue.id)+'">Revisar pendiente</button>';
-  }else if(next){
-    title=next.title;desc='Próximo · '+next.start+'–'+next.end;
-    action='<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(next.id)+'">Ver próxima</button>';
-  }else if(f.priorities?.length){
-    title=f.priorities[0].title;
-    desc='Sugerencia para tu tiempo disponible, no una tarea obligatoria.';
-    action=priorityButton(f.priorities[0],'btn-sm btn-primary');
-  }
-  const pastNote=missedTime?'<p class="focus-hint">'+missedTime+' actividad(es) con la hora pasada, pendientes de confirmar. No se marcaron como incumplidas.</p>':'';
-  const promptReminders=!prefs(s).reminders?'<div class="focus-hint"><button type="button" class="btn btn-sm" data-act="enable-today-reminders">'+icon('bell','sm')+'Activar avisos antes de mis actividades</button><p>Los avisos locales funcionan con Brújula abierta. Con la app cerrada se requiere la opción de notificaciones push en Ajustes.</p></div>':'';
-  return '<section class="today-focus-grid" aria-label="Pendientes y recomendaciones de hoy">'+
-    '<div class="panel focus-card"><div class="section-head"><h2>'+icon('list-todo','sm')+'Hoy pendiente <span class="count-badge">'+pending.length+'</span></h2></div>'+pastNote+pendingHtml+'</div>'+
-    '<div class="panel focus-card"><div class="section-head"><h2>'+icon('compass','sm')+'Qué hacer ahora</h2></div>'+
-      '<div class="focus-recommend"><span class="chip">Hora actual: '+toHHMM(now)+'</span><h3>'+esc(title)+'</h3><p class="muted small">'+esc(desc)+'</p>'+action+'</div>'+
-      '<p class="focus-hint">Puedes marcar las actividades completadas con ✓. Tu horario no se modifica sin tu acción.</p>'+promptReminders+'</div>'+
-    '</section>';
+function miniWeek(s, today) {
+  const dates = Array.from({length:7}, (_, i) => addDays(today, i));
+  const byDay = new Map(dates.map(d => [d, []]));
+  for (const b of s.blocks) if (byDay.has(b.date) && isUsableBlock(b)) byDay.get(b.date).push(b);
+  for (const blocks of byDay.values()) blocks.sort((a, b) => a.start.localeCompare(b.start));
+  return `<section class="section week-overview" aria-labelledby="overviewTitle">
+    <div class="section-head"><div><h2 id="overviewTitle">Mi semana</h2><p class="small muted">${esc(fmtShort(today))} – ${esc(fmtShort(dates[6]))}</p></div>
+      <div class="hstack"><button type="button" class="icon-btn" data-act="download-week" data-date="${esc(today)}" aria-label="Descargar semana como CSV editable" title="Descargar semana · CSV editable">${icon('download', 'sm')}</button>
+      <a class="link" href="#/semana/${esc(today)}">Abrir horario${icon('chevron-right', 'sm')}</a></div></div>
+    <div class="panel week-overview-list">${dates.map((d, i) => {
+      const blocks = byDay.get(d);
+      const index = (new Date(d + 'T12:00:00').getDay() + 6) % 7;
+      return `<section class="week-overview-day ${i === 0 ? 'is-today' : ''}" aria-label="${esc(fmtLong(d))}">
+        <a class="week-overview-date" href="#/semana/${d}"><span>${i === 0 ? 'Hoy' : cap(WEEKDAYS_SHORT[index])}</span><b>${Number(d.slice(8))}</b></a>
+        <div class="week-overview-activities">${blocks.length ? blocks.map(b => activityItem(b, {compact:true})).join('') : `<div class="week-overview-empty"><span>Sin actividades</span><button type="button" class="link" data-act="quick-add" data-date="${d}">Añadir</button></div>`}</div>
+      </section>`;
+    }).join('')}</div>
+  </section>`;
 }
 
 export function render(c) {
   const s = c.state;
   const f = computeFocus(s, c.now);
-  const decisions = f.decisions;
-  const m = mode();
-  const decide = decisions.length ? `<section class="section" aria-labelledby="decTitle">
-      <div class="section-head"><h2 id="decTitle">¿Cómo te fue? <span class="count-badge">${decisions.length}</span></h2><a class="link" href="#/ajustes/modos" title="Modo de reprogramación">${icon(modeDetail(m).icon, 'sm')}${esc(modeDetail(m).title)}</a></div>
-      <div class="panel"><ul class="list">${decisions.slice(0, 3).map((b) => decisionItem(b, f.today)).join('')}</ul>
-      ${decisions.length > 3 ? `<button type="button" class="btn btn-quiet btn-block" data-act="all-decisions">Ver ${decisions.length - 3} más</button>` : ''}</div></section>` : '';
-  const prios = f.priorities.slice(0, 4);
-  const priorities = `<section class="section" aria-labelledby="prioTitle"><div class="section-head"><h2 id="prioTitle">Prioridades</h2>${prios.some((p) => p.type === 'topic') ? `<button type="button" class="btn btn-sm btn-quiet" data-act="plan-week">${icon('wand-sparkles', 'sm')}Planificar semana</button>` : `<a class="link" href="#/estudio/temas">Estudio${icon('chevron-right', 'sm')}</a>`}</div>
-    ${prios.length ? `<div class="panel"><ol class="list">${prios.map((p, i) => `<li class="prio"><span class="prio-rank" aria-label="Prioridad ${i + 1}">${i + 1}</span>
-        <div class="prio-title">${esc(p.title)}</div>${priorityButton(p)}
-        <div class="prio-why">${courseTag(p.courseId, { short: true })}${p.reasons.slice(0, 3).map((r) => `<span class="chip ${r.tone === 'urgent' ? 'urgent' : r.tone === 'ok' ? 'ok' : ''}">${esc(r.text)}</span>`).join('')}</div></li>`).join('')}</ol></div>`
-      : emptyState({ title: 'Sin prioridades aún', text: 'Agrega tus cursos, temas y exámenes; Brújula ordenará qué estudiar primero.', action: 'go', actionLabel: 'Ir a Estudio', actionIcon: 'book-open' }).replace('data-act="go"', 'data-act="go" data-to="estudio"')}
-  </section>`;
-  const line = `<section class="section" aria-labelledby="lineTitle"><div class="section-head"><h2 id="lineTitle">Recorrido de hoy</h2>${f.todays.length ? `<span class="chip">${f.done}/${f.todays.length} hechos</span>` : ''}</div>
-    ${f.load.studyMin && !f.load.overloaded ? `<p class="small muted" style="margin-top:-6px">${esc(fmtDuration(f.load.studyMin))} de estudio hoy · tu límite es ${esc(fmtDuration(f.load.maxStudy))}</p>` : ''}
-    ${f.load.overloaded ? `<div class="notice warn">${icon('triangle-alert')}<div>Hoy tienes <b>${esc(fmtDuration(f.load.studyMin))}</b> de estudio, más que tu límite de ${esc(fmtDuration(f.load.maxStudy))}. Considera mover algo.</div></div>` : ''}
-    <div class="panel">${courseLine(f, s)}</div></section>`;
-  return `<div class="today">${banners(s)}${todayDashboard(f,s)}
-    <div class="today-grid"><div class="stack-lg">${rumbo(f, s)}${decide}${line}${comingSoon(s,c.today)}</div>
-    <div class="today-side">${priorities}${evalCards(f)}${habitsToday(s, f.today)}${miniWeek(s,c.today)}</div></div>
+  return `<div class="today">${banners(s)}
+    <div class="today-grid"><div class="today-focus">${rumbo(f, s)}</div>${todayPending(f)}</div>
+    ${miniWeek(s, c.today)}${evalCards(f)}
   </div>`;
 }
 
 // ——— Acciones de esta pantalla ———
 action('outcome', (el) => { haptic(); return setOutcome(el.dataset.id, el.dataset.status); });
-action('enable-today-reminders', async () => {
-  const {enableReminders}=await import('../features/reminders.js');
-  const r=await enableReminders(true);
-  const {toast}=await import('../ui/feedback.js');
-  toast(r.ok?'Avisos activados para las actividades próximas.':r.message,{tone:r.ok?'ok':'warn',duration:6200});
-});
 action('move', (el) => proposeMove(el.dataset.id));
 action('habit', (el) => { haptic(); toggleHabit(el.dataset.date, el.dataset.habit); });
 action('all-decisions', () => openDecisionsSheet());

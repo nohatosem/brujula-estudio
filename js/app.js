@@ -63,7 +63,7 @@ function badgeCounts() {
 function shellHTML() {
   return `<aside class="rail" aria-label="Navegación principal">
       <a class="brand" href="#/hoy" aria-label="Brújula, inicio">${BRAND}<b>Brújula</b></a>
-      <button type="button" class="btn btn-primary btn-block" data-act="quick-add">${icon('plus')}Planificar</button>
+      <button type="button" class="btn btn-primary btn-block" data-act="quick-add">${icon('plus')}Añadir actividad</button>
       <nav class="rail-nav" id="railNav"></nav>
       <div class="rail-foot">
         <button type="button" class="btn btn-soft btn-block" data-act="assistant">${icon('sparkles')}Asistente</button>
@@ -78,7 +78,7 @@ function shellHTML() {
     <nav class="tabbar" aria-label="Navegación">
       <a class="tab" href="#/hoy" data-nav="hoy">${icon('compass')}<span>Hoy</span></a>
       <a class="tab" href="#/semana" data-nav="semana">${icon('calendar-days')}<span>Semana</span></a>
-      <button type="button" class="tab-add" data-act="quick-add" aria-label="Planificar algo nuevo">${icon('plus')}</button>
+      <button type="button" class="tab-add" data-act="quick-add" aria-label="Añadir actividad">${icon('plus')}</button>
       <a class="tab" href="#/estudio" data-nav="estudio">${icon('book-open')}<span>Estudio</span></a>
       <button type="button" class="tab" data-act="more" data-nav="more">${icon('ellipsis')}<span>Más</span></button>
     </nav>`;

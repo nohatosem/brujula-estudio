@@ -1,5 +1,13 @@
 # Cambios
 
+## 4.2.4 · 17 de octubre de 2026
+
+- **Hoy más claro:** «Tu rumbo ahora» a la izquierda y una sola lista de pendientes a la derecha. Se retiran de Hoy las tarjetas duplicadas, prioridades y hábitos; los hábitos siguen en Vida.
+- **Mi semana a todo el ancho:** títulos completos, horarios, círculos para marcar actividades con Deshacer y notas editables. Las notas también aparecen en los detalles y el formulario de edición.
+- **Descarga semanal:** CSV editable con los siete días visibles, sus actividades y notas. Disponible en Hoy y Semana.
+- **Botones más claros:** «Añadir actividad» abre el formulario individual; «Planificar semana» organiza varias sesiones.
+- Actualización de versión y precaché de la PWA. Se conservan el modelo, los horarios, las cuentas y la configuración de descanso.
+
 ## 4.0.0 · 17 de octubre de 2026
 
 Rediseño completo y nueva base de código modular (sin paso de compilación). Tus datos, cuentas, Supabase y Gemini se conservan; ver [docs/INTEGRACION.md](docs/INTEGRACION.md).

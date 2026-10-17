@@ -37,8 +37,8 @@ export function openQuickAdd({ date = null, start = null } = {}) {
   const examples = ['Repasar vectores mañana 4pm', 'Clase de Física lunes 8:00', 'Gym hoy 6 a 7 de la tarde', 'Examen de C++ el 28/10 a las 9'];
   let parsed = null;
   const sheet = openSheet({
-    title: 'Planificar',
-    body: `<label class="field"><span class="sr-only">¿Qué quieres planificar?</span>
+    title: 'Añadir actividad',
+    body: `<label class="field"><span class="sr-only">¿Qué actividad quieres añadir?</span>
         <input class="input" id="qaText" autocomplete="off" autofocus placeholder="Ej.: ${esc(examples[Math.floor(Math.random() * examples.length)])}" maxlength="160" enterkeyhint="done"></label>
       <div id="qaPreview" class="stack" aria-live="polite"></div>
       <div class="hstack qa-ai-actions"><button type="button" class="btn btn-soft" data-ai-plan>✨ Planificar con IA</button><button type="button" class="btn btn-soft" data-chatgpt-plan>ChatGPT (beta)</button></div><p class="hint">ChatGPT prepara una solicitud privada sin copiar tu horario; para obtener respuesta debes abrir ChatGPT con Supabase conectado.</p>
@@ -170,6 +170,7 @@ export function openBlockForm(block, { isNew = false } = {}) {
       <label class="field full" id="bfTopicWrap"><span>Tema</span><select class="select" name="topicId">${topicOpts(b.courseId, b.topicId)}</select></label>
     </div>
     <label class="field"><span>Objetivo</span><textarea class="textarea" name="goal" rows="2" maxlength="1200" placeholder="Ej.: resolver 3 problemas sin ayuda">${esc(b.goal)}</textarea></label>
+    <label class="field"><span>Nota de la actividad</span><textarea class="textarea" name="notes" rows="2" maxlength="6000" placeholder="Materiales o recordatorios…">${esc(b.notes || '')}</textarea></label>
     <details><summary class="label">Material para la sesión guiada</summary><div class="stack" style="margin-top:10px">
       <label class="field"><span>Explicación o apuntes</span><textarea class="textarea" name="intro" maxlength="6000">${esc(L.intro || '')}</textarea></label>
       <label class="field"><span>Ejercicio</span><textarea class="textarea" name="problem" rows="2" maxlength="3000">${esc(L.problem || '')}</textarea></label>
@@ -218,7 +219,7 @@ export function openBlockForm(block, { isNew = false } = {}) {
         const warns = placementWarnings({ ...d, id: b.id });
         if (warns.includes(VIOLATION_TEXT.overlap) && !(await confirmSheet({ title: 'Se cruza con otra actividad', text: '¿Guardar de todos modos?', confirm: 'Guardar igual' }))) return;
         const lesson = { intro: d.intro.trim(), problem: d.problem.trim(), steps: d.steps.split('\n').map((x) => x.trim()).filter(Boolean), question: d.question.trim(), answer: d.answer.trim() };
-        const fields = { title: d.title.trim(), kind: d.kind, courseId: d.courseId, date: d.date, start: d.start, end: d.end, priority: d.priority, difficulty: Number(d.difficulty), goal: d.goal.trim(), lesson };
+        const fields = { title: d.title.trim(), kind: d.kind, courseId: d.courseId, date: d.date, start: d.start, end: d.end, priority: d.priority, difficulty: Number(d.difficulty), goal: d.goal.trim(), notes: d.notes.slice(0, 6000), lesson };
         if (d.kind === 'study' && d.topicId) fields.topicId = d.topicId;
         const days = (d.repeatDays || []).map(Number);
         const until = isValidDate(d.repeatUntil) ? d.repeatUntil : addDays(d.date, 7 * 16);
