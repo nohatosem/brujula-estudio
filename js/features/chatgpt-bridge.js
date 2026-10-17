@@ -12,12 +12,13 @@ import {icon} from '../ui/icons.js';
 import {esc} from '../core/util.js';
 
 const TABLE='brujula_assistant_requests';
-export async function createChatGPTRequest(instruction=''){
+export async function createChatGPTRequest(instruction='',extras={}){
   if(!cloud.user)throw Error('Primero inicia sesión en Brújula.');
   const s=store.state,client=await getClient();
   const min=addDays(todayISO(),-1),max=addDays(todayISO(),125);
   const context={
     version:1,createdAt:new Date().toISOString(),
+    ...(extras.material ? {material:extras.material} : {}),
     request:String(instruction||'Propón un horario de estudio equilibrado con mis prioridades.').slice(0,700),
     courses:s.courses.map(c=>({id:c.id,name:c.name,importance:c.importance,difficulty:c.difficulty})),
     blocks:s.blocks.filter(b=>b.date>=min&&b.date<=max).slice(0,600).map(b=>({
@@ -33,7 +34,7 @@ export async function createChatGPTRequest(instruction=''){
   return data;
 }
 export function openChatGPTGuide(request){
-  return openSheet({title:'Planificar con ChatGPT (beta)',
+  const sheet=openSheet({title:'Planificar con ChatGPT (beta)',
     body:'<div class="stack"><p>Tu solicitud y los bloques necesarios ya están guardados de forma privada en Supabase. <b>No necesitas copiar tu calendario.</b></p>'+
       '<div class="notice"><div><b>1.</b> Abre ChatGPT con Supabase conectado y escribe: <em>«Revisa mi última solicitud de Brújula y prepara la propuesta»</em>.<br><b>2.</b> Vuelve aquí y pulsa <b>Buscar propuesta</b>. ChatGPT no responde automáticamente dentro de Brújula.</div></div>'+
       '<p class="small muted">Solicitud '+esc(request.id.slice(0,8))+' · expira '+esc(new Date(request.expires_at).toLocaleString('es-PE'))+'. Es una integración beta, sin API de OpenAI ni cargos nuevos.</p></div>',
@@ -47,14 +48,15 @@ export function openChatGPTGuide(request){
       card.querySelector('[data-load-plan]')?.addEventListener('click',async()=>{
         const btn=card.querySelector('[data-load-plan]');btn.disabled=true;
         try{const result=await checkChatGPTProposal(request.id);
-          if(result){card.closest('dialog')?.close();card.closest('dialog')?.remove();}
+          if(result)sheet.close();
         }catch(e){toast(e.message,{tone:'warn'});}finally{btn.disabled=false;}
       });
     }
   });
+  return sheet;
 }
-export async function requestChatGPT(instruction=''){
-  const r=await createChatGPTRequest(instruction);
+export async function requestChatGPT(instruction='',extras={}){
+  const r=await createChatGPTRequest(instruction,extras);
   openChatGPTGuide(r);
   return r;
 }
