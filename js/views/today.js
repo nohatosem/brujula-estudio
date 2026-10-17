@@ -231,11 +231,12 @@ function todayDashboard(f,s){
     action=priorityButton(f.priorities[0],'btn-sm btn-primary');
   }
   const pastNote=missedTime?'<p class="focus-hint">'+missedTime+' actividad(es) con la hora pasada, pendientes de confirmar. No se marcaron como incumplidas.</p>':'';
+  const promptReminders=!prefs(s).reminders?'<div class="focus-hint"><button type="button" class="btn btn-sm" data-act="enable-today-reminders">'+icon('bell','sm')+'Activar avisos antes de mis actividades</button><p>Los avisos locales funcionan con Brújula abierta. Con la app cerrada se requiere la opción de notificaciones push en Ajustes.</p></div>':'';
   return '<section class="today-focus-grid" aria-label="Pendientes y recomendaciones de hoy">'+
     '<div class="panel focus-card"><div class="section-head"><h2>'+icon('list-todo','sm')+'Hoy pendiente <span class="count-badge">'+pending.length+'</span></h2></div>'+pastNote+pendingHtml+'</div>'+
     '<div class="panel focus-card"><div class="section-head"><h2>'+icon('compass','sm')+'Qué hacer ahora</h2></div>'+
       '<div class="focus-recommend"><span class="chip">Hora actual: '+toHHMM(now)+'</span><h3>'+esc(title)+'</h3><p class="muted small">'+esc(desc)+'</p>'+action+'</div>'+
-      '<p class="focus-hint">Puedes marcar las actividades completadas con ✓. Tu horario no se modifica sin tu acción.</p></div>'+
+      '<p class="focus-hint">Puedes marcar las actividades completadas con ✓. Tu horario no se modifica sin tu acción.</p>'+promptReminders+'</div>'+
     '</section>';
 }
 
@@ -267,6 +268,12 @@ export function render(c) {
 
 // ——— Acciones de esta pantalla ———
 action('outcome', (el) => { haptic(); return setOutcome(el.dataset.id, el.dataset.status); });
+action('enable-today-reminders', async () => {
+  const {enableReminders}=await import('../features/reminders.js');
+  const r=await enableReminders(true);
+  const {toast}=await import('../ui/feedback.js');
+  toast(r.ok?'Avisos activados para las actividades próximas.':r.message,{tone:r.ok?'ok':'warn',duration:6200});
+});
 action('move', (el) => proposeMove(el.dataset.id));
 action('habit', (el) => { haptic(); toggleHabit(el.dataset.date, el.dataset.habit); });
 action('all-decisions', () => openDecisionsSheet());
