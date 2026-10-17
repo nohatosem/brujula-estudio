@@ -34,15 +34,20 @@ export async function createChatGPTRequest(instruction='',extras={}){
   return data;
 }
 export function openChatGPTGuide(request){
+  const instruction = 'Brújula: consulta exclusivamente la solicitud con ID '+request.id+
+    ' en mi proyecto Supabase conectado. Prepara una propuesta JSON con {version:1,changes:[...]} y guarda la propuesta en ESA SOLICITUD. No consultes ni muestres datos de otras cuentas.';
   const sheet=openSheet({title:'Planificar con ChatGPT (beta)',
     body:'<div class="stack"><p>Tu solicitud y los bloques necesarios ya están guardados de forma privada en Supabase. <b>No necesitas copiar tu calendario.</b></p>'+
-      '<div class="notice"><div><b>1.</b> Abre ChatGPT con Supabase conectado y escribe: <em>«Revisa mi última solicitud de Brújula y prepara la propuesta»</em>.<br><b>2.</b> Vuelve aquí y pulsa <b>Buscar propuesta</b>. ChatGPT no responde automáticamente dentro de Brújula.</div></div>'+
+      '<div class="notice"><div><b>1.</b> Pulsa «Copiar mensaje y abrir ChatGPT». Pega allí el mensaje corto (solo el ID, no tu calendario).<br><b>2.</b> Cuando ChatGPT haya preparado la propuesta, vuelve aquí y pulsa <b>Buscar propuesta</b>. No se consulta otra cuenta ni responde automáticamente dentro de Brújula.</div></div>'+
       '<p class="small muted">Solicitud '+esc(request.id.slice(0,8))+' · expira '+esc(new Date(request.expires_at).toLocaleString('es-PE'))+'. Es una integración beta, sin API de OpenAI ni cargos nuevos.</p></div>',
     foot:'<button type="button" class="btn" data-sheet-close>Cerrar</button>'+
-      '<button type="button" class="btn btn-soft" data-open-gpt>Abrir ChatGPT</button>'+
+      '<button type="button" class="btn btn-soft" data-open-gpt>Copiar mensaje y abrir ChatGPT</button>'+
       '<button type="button" class="btn btn-primary" data-load-plan>Buscar propuesta</button>',
     onMount(card){
       card.querySelector('[data-open-gpt]')?.addEventListener('click',()=>{
+        navigator.clipboard?.writeText(instruction).catch(()=>{
+          toast('No se pudo copiar: revisa los permisos de portapapeles.',{tone:'warn'});
+        });
         window.open('https://chatgpt.com/','_blank','noopener,noreferrer');
       });
       card.querySelector('[data-load-plan]')?.addEventListener('click',async()=>{
