@@ -1,5 +1,13 @@
 # Cambios
 
+## 4.2.5 · 17 de octubre de 2026
+
+- **Rutina editable en conjunto:** conserva la plantilla y su fecha final, actualiza las repeticiones futuras sin empezar y mantiene IDs, notas y actividades realizadas. Los cambios pueden deshacerse junto con la configuración.
+- **Sin duplicados personales:** el generador reconoce ejercicio, limpieza y otras actividades equivalentes que ya estaban guardadas, aunque no procedan del generador.
+- **Semana coordinada:** selector Todo / Académico / Rutina. Las comprobaciones de disponibilidad siguen considerando el horario completo.
+- Lectura personal opcional en la plantilla; las preferencias de despertar siguen siendo individuales.
+- Precaché actualizado y pruebas de edición/sincronización con más de 1.100 actividades, incluidas comprobaciones de selección de voz española.
+
 ## 4.2.4 · 17 de octubre de 2026
 
 - **Hoy más claro:** «Tu rumbo ahora» a la izquierda y una sola lista de pendientes a la derecha. Se retiran de Hoy las tarjetas duplicadas, prioridades y hábitos; los hábitos siguen en Vida.

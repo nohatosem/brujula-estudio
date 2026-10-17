@@ -96,8 +96,9 @@ const print = (b) => (b ? [b.date, b.start, b.end, b.status, b.title, b.courseId
  * Ejecuta `mutate(state)` registrando lo necesario para deshacerlo.
  * blockIds: bloques existentes que pueden cambiar. Los nuevos se detectan solos.
  */
-export function change({ label, type = 'change', blockIds = [], topicIds = [], evaluationIds = [], mutate, event = null, render = true }) {
+export function change({ label, type = 'change', blockIds = [], topicIds = [], evaluationIds = [], preferenceKeys = [], mutate, event = null, render = true }) {
   const s = store.state;
+  const preferencesBefore=preferenceKeys.map(key=>({key,exists:Object.hasOwn(s.preferences,key),value:Object.hasOwn(s.preferences,key)?clone(s.preferences[key]):null}));
   const before = blockIds.map((id) => s.blocks.find((b) => b.id === id)).filter(Boolean).map((b) => clone(b));
   const topicsBefore = topicIds.map((id) => s.topics.find((t) => t.id === id)).filter(Boolean).map((t) => clone(t));
   const evalsBefore = evaluationIds.map((id) => s.evaluations.find((e) => e.id === id)).filter(Boolean).map((e) => clone(e));
@@ -113,6 +114,7 @@ export function change({ label, type = 'change', blockIds = [], topicIds = [], e
   const prints = {};
   for (const id of [...blockIds, ...createdIds]) prints[id] = print(s.blocks.find((b) => b.id === id));
   const entry = { id: gid(), at: new Date().toISOString(), label, type, before, createdIds, createdCourseIds, topicsBefore, createdTopicIds, evalsBefore, createdEvalIds, prints };
+  if(preferenceKeys.length){entry.preferencesBefore=preferencesBefore;entry.preferencesAfter=preferenceKeys.map(key=>({key,exists:Object.hasOwn(s.preferences,key),value:Object.hasOwn(s.preferences,key)?clone(s.preferences[key]):null}));}
   s.undo = [entry, ...(s.undo || [])].slice(0, UNDO_LIMIT);
   if (event) pushEvent(s, makeEvent(s, event));
   commit({ render });
@@ -122,6 +124,9 @@ export function change({ label, type = 'change', blockIds = [], topicIds = [], e
 export function canUndo(entry) {
   const s = store.state;
   if (!entry) return { ok: false, reason: 'No hay nada que deshacer.' };
+  for(const p of entry.preferencesAfter||[])if(Object.hasOwn(s.preferences,p.key)!==p.exists||
+    (p.exists&&JSON.stringify(s.preferences[p.key])!==JSON.stringify(p.value)))
+    return {ok:false,reason:'La configuración cambió después; revisa el ajuste antes de deshacer.'};
   for (const [id, p] of Object.entries(entry.prints || {})) {
     const cur = s.blocks.find((b) => b.id === id);
     if (print(cur) !== p) return { ok: false, reason: 'Esa actividad cambió después; edítala a mano.' };
@@ -143,6 +148,7 @@ export function undo(entryId) {
   s.topics = s.topics.filter((t) => !(entry.createdTopicIds || []).includes(t.id));
   for (const t of entry.topicsBefore || []) { const i = s.topics.findIndex((x) => x.id === t.id); if (i >= 0) s.topics[i] = clone(t); else s.topics.push(clone(t)); }
   s.evaluations = s.evaluations.filter((e) => !(entry.createdEvalIds || []).includes(e.id));
+  for(const p of entry.preferencesBefore||[]){if(p.exists)s.preferences[p.key]=clone(p.value);else delete s.preferences[p.key];}
   for (const e of entry.evalsBefore || []) { const i = s.evaluations.findIndex((x) => x.id === e.id); if (i >= 0) s.evaluations[i] = clone(e); else s.evaluations.push(clone(e)); }
   // Mantener en Vida el mismo estado que las sesiones personales restauradas.
   for(const b of entry.before||[]){
