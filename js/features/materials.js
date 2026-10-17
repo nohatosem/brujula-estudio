@@ -1,7 +1,7 @@
 // Archivos de estudio privados: PDF en Supabase Storage, dueño por carpeta UUID.
 // Lectura local opcional de texto; no se entrega el PDF a Gemini ni a ChatGPT por subirlo.
 import { cloud,getClient } from '../cloud/cloud.js';
-import {store,change} from '../core/store.js';
+import {store,commit} from '../core/store.js';
 import {toast} from '../ui/feedback.js';
 const BUCKET='brujula-materiales';
 const MAX_SIZE=10*1024*1024;
@@ -32,12 +32,10 @@ export async function uploadPDF(topicId,file){
   if(error)throw Error('No se pudo subir PDF: '+error.message);
   const excerpt=await extractText(file);
   try {
-    change({label:'Adjuntar PDF a «'+t.title+'»',type:'material',topicIds:[topicId],
-      mutate(s){const current=s.topics.find(x=>x.id===topicId);if(!current)throw Error('Tema inexistente');
-        current.materials=[...(current.materials||[]),{
-          id:uuid,path,name,size:file.size,excerpt,uploadedAt:new Date().toISOString()
-        }];}
-    });
+    const current=store.state.topics.find(x=>x.id===topicId);
+    if(!current)throw Error('Tema inexistente');
+    current.materials=[...(current.materials||[]),{id:uuid,path,name,size:file.size,excerpt,uploadedAt:new Date().toISOString()}];
+    commit();
   }catch(e){await client.storage.from(BUCKET).remove([path]);throw e;}
   toast(excerpt?'PDF guardado y texto preparado para analizar.':'PDF privado guardado. No se extrajo texto (quizá es un escaneo).',{tone:'ok',duration:6500});
   return {name,excerpt};
@@ -64,9 +62,8 @@ export async function removePDF(topicId,id){
   const client=await getClient();
   const {error}=await client.storage.from(BUCKET).remove([m.path]);
   if(error)throw Error('No se pudo borrar el PDF: '+error.message);
-  change({label:'Quitar PDF',type:'material',topicIds:[topicId],
-    mutate(s){const t=s.topics.find(x=>x.id===topicId);t.materials=(t.materials||[]).filter(x=>x.id!==id);}
-  });
+  const t=findTopic(topicId); t.materials=(t.materials||[]).filter(x=>x.id!==id);
+  commit();
 }
 export async function analyzePDF(topicId,id){
   const topic=findTopic(topicId),m=(topic?.materials||[]).find(x=>x.id===id);
