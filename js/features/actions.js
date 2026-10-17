@@ -61,6 +61,10 @@ export async function setOutcome(id, status, { reason = '', difficulty = null, q
       if (status === 'review') x.reviewDate = addDays(todayISO(), 1);
       if (status === 'mastered') { x.reviewDate = ''; x.doneAt = new Date().toISOString(); }
       linkTopicAndGrade(s, x, status);
+      if (x.kind==='personal' && x.habitId) {
+        s.habits[x.date] ??= {};
+        s.habits[x.date][x.habitId]=s.blocks.some(z=>z.date===x.date&&z.habitId===x.habitId&&z.status==='mastered');
+      }
       if (difficulty && (difficulty.text || difficulty.kind)) {
         s.difficulties.unshift({ id: gid(), at: new Date().toISOString(), topicId: x.topicId || null, courseId: x.courseId, blockId: x.id, kind: difficulty.kind || 'other', text: String(difficulty.text || '').slice(0, 300), resolved: false });
       }
@@ -441,6 +445,7 @@ export function toggleHabit(date, habitId) {
   const s = S();
   s.habits[date] ??= {};
   s.habits[date][habitId] = !s.habits[date][habitId];
+  for (const b of s.blocks) if(b.date===date&&b.kind==='personal'&&b.habitId===habitId&&['scheduled','mastered'].includes(b.status)) b.status = s.habits[date][habitId]?'mastered':'scheduled';
   commit();
   return s.habits[date][habitId];
 }
