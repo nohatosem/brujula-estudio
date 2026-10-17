@@ -39,12 +39,12 @@ export function masteryMeter(m, { label = true } = {}) {
 /** Fila de actividad para agendas (botón que abre el detalle). */
 export function blockRow(b, { conflict = false, showDate = false } = {}) {
   const c = courseOf(store.state, b.courseId);
-  const fixed = isFixedKind(b.kind);
+  const fixed = isFixedKind(b.kind) || !!b.semesterFixed;
   const done = b.status === 'mastered';
   return `<button type="button" class="ev ${fixed ? 'fixed' : ''} k-${b.kind} ${done ? 'done' : ''} ${conflict ? 'conflict' : ''}" style="--c:${esc(c.color)}" data-act="open-block" data-id="${esc(b.id)}">
     <span class="ev-time"><b>${esc(b.start)}</b><span>${esc(b.end)}</span></span>
     <span class="ev-body"><span class="ev-title">${esc(b.title)}</span>
-      <span class="ev-meta">${showDate ? `<span>${esc(fmtRelDay(b.date, todayISO()))}</span>` : ''}<span class="course-tag" style="--c:${esc(c.color)}"><span class="ellipsis">${esc(cut(c.name, 26))}</span></span>${kindChip(b)}${statusChip(b)}${conflict ? `<span class="chip urgent">${icon('triangle-alert', 'sm')}Cruce</span>` : ''}</span></span>
+      <span class="ev-meta">${showDate ? `<span>${esc(fmtRelDay(b.date, todayISO()))}</span>` : ''}<span class="course-tag" style="--c:${esc(c.color)}"><span class="ellipsis">${esc(cut(c.name, 26))}</span></span>${kindChip(b)}${b.semesterFixed ? `<span class="chip">↻ Fijo</span>` : ''}${statusChip(b)}${conflict ? `<span class="chip urgent">${icon('triangle-alert', 'sm')}Cruce</span>` : ''}</span></span>
     <span aria-hidden="true">${icon('chevron-right', 'sm')}</span>
   </button>`;
 }
