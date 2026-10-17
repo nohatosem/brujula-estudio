@@ -1,4 +1,4 @@
-# Brújula 3.5 — Horario inteligente
+# Brújula 3.6 — horario y tutor de IA gratuito
 
 Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
 
@@ -82,3 +82,21 @@ Actualizar código desde el plugin GitHub es distinto de modificar información 
 - Chat abierto de IA generativa dentro de Brújula y conversación libre por voz. Esto requiere una conexión autorizada, un backend protegido, controles de privacidad y posibles costes por uso. Una suscripción personal ChatGPT Plus no permite usarla como API compartida.
 - Notificaciones push mientras el navegador está cerrado.
 - Aprendizaje automático con seguimiento autónomo de la persona, procesamiento de PDF y tarjetas inteligentes a partir de documentos.
+
+## Chat con Gemini API (desde Brújula 3.6)
+
+El chat usa **Gemini 2.5 Flash-Lite**, invocado exclusivamente desde la función protegida `brujula-ai` de Supabase. No escribas la clave Gemini en `index.html`, scripts o GitHub.
+
+1. En [Google AI Studio](https://aistudio.google.com/api-keys), crea una clave API en un proyecto con el **nivel gratuito**, sin habilitar facturación.
+2. Abre Supabase Dashboard → Edge Functions → Secrets (secretos del proyecto).
+3. Guarda un secreto con nombre exacto `GEMINI_API_KEY` y valor tu clave. **No la envíes en una conversación ni la publiques en GitHub**.
+4. Abre Brújula, inicia sesión y entra en **Mi asistente**. Acepta el aviso de privacidad y escribe una pregunta.
+5. Si aparece un 429, se agotó la cuota del usuario/proyecto o hay demasiadas peticiones; espera al restablecimiento. En la prueba los máximos locales son **15 consultas al día por usuario, 100 globales al día, y una consulta cada ocho segundos**.
+
+### Seguridad
+- La Edge Function requiere una sesión JWT válida y confirma identidad con Supabase Auth.
+- La tabla `brujula_ai_usage` y la tabla de cuota global están protegidas; la función SQL `brujula_ai_take_turn()` limita consumos de usuarios autenticados.
+- El HTML nunca obtiene la clave de Gemini. Los usuarios deben dar su consentimiento antes de transmitir cada conversación; compartir el horario es opcional y desactivado por defecto.
+- Gemini en el nivel gratuito puede usar los datos enviados para mejorar sus productos. No compartas información sensible, contraseñas ni datos de terceros.
+- El chat puede asesorar pero no actualiza directamente las actividades. La aplicación conserva el mecanismo de aprobación explícita.
+- **No está comprobada una respuesta exitosa real de Gemini hasta configurar la clave API.** Las cuotas reales de Google pueden ser inferiores o diferentes a los topes de Brújula. No funciona con la página cerrada y no incorpora PDFs todavía.
