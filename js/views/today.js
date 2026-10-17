@@ -195,6 +195,55 @@ function miniWeek(s,today){
     }).join('')+'</div></section>';
 }
 
+
+/** Dos tarjetas accionables, sin marcar como incumplido solo porque pasó la hora. */
+function todayDashboard(f,s){
+  const now=f.nowMin;
+  const pending=f.todays.filter(b=>!['mastered'].includes(b.status))
+    .sort((a,b)=>toMin(a.start)-toMin(b.start));
+  const remaining=pending.filter(b=>b.status!=='missed');
+  const current=f.current || remaining.find(b=>toMin(b.start)<=now&&now<toMin(b.end));
+  const next=remaining.find(b=>toMin(b.start)>now);
+  const overdue=remaining.find(b=>toMin(b.end)<=now);
+  const missedTime=pending.filter(b=>toMin(b.end)<=now&&b.status!=='missed').length;
+  const pendingHtml=pending.length?pending.slice(0,5).map(b=>{
+    const past=toMin(b.end)<now&&b.status!=='missed';
+    const kind=b.kind==='study'||b.kind==='personal';
+    return '<div class="focus-item"><span class="focus-item-time">'+esc(b.start)+'</span>'+
+      '<div class="focus-item-body"><b>'+esc(cut(b.title,55))+'</b><small>'+
+      (past?'Hora pasada · aún sin confirmar':b.status==='missed'?'No realizada':'Programada')+'</small></div>'+
+      (kind?'<button type="button" class="focus-check" data-act="outcome" data-id="'+esc(b.id)+
+        '" data-status="mastered" title="Marcar como hecha" aria-label="Marcar '+esc(b.title)+' como hecho">'+icon('check')+'</button>':
+        '<button type="button" class="focus-check" data-act="open-block" data-id="'+esc(b.id)+'" title="Abrir detalles" aria-label="Abrir detalles">'+icon('chevron-right')+'</button>')+
+      '</div>';
+  }).join('')+(pending.length>5?'<a class="link small" href="#/semana">Ver todas las pendientes en Semana</a>':''):'<p class="muted small">Sin actividades pendientes para hoy. Puedes añadir una.</p>';
+  let title='Tiempo disponible',desc='Aún no tienes una actividad marcada para esta hora.',action=
+    '<button class="btn btn-sm btn-primary" data-act="quick-add">'+icon('plus','sm')+'Planificar algo</button>';
+  if(current){
+    title=current.title;desc='Ahora · '+current.start+'–'+current.end;
+    action=current.kind==='study'?'<a class="btn btn-sm btn-primary" href="#/sesion/'+encodeURIComponent(current.id)+'">'+icon('play','sm')+'Empezar sesión</a>':
+      '<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(current.id)+'">Ver actividad</button>';
+  }else if(overdue){
+    title=overdue.title;desc='Pendiente de revisar · estaba programado de '+overdue.start+' a '+overdue.end;
+    action='<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(overdue.id)+'">Revisar pendiente</button>';
+  }else if(next){
+    title=next.title;desc='Próximo · '+next.start+'–'+next.end;
+    action='<button type="button" class="btn btn-sm btn-primary" data-act="open-block" data-id="'+esc(next.id)+'">Ver próxima</button>';
+  }else if(f.priorities?.length){
+    title=f.priorities[0].title;
+    desc='Sugerencia para tu tiempo disponible, no una tarea obligatoria.';
+    action=priorityButton(f.priorities[0],'btn-sm btn-primary');
+  }
+  const pastNote=missedTime?'<p class="focus-hint">'+missedTime+' actividad(es) con la hora pasada, pendientes de confirmar. No se marcaron como incumplidas.</p>':'';
+  const promptReminders=!prefs(s).reminders?'<div class="focus-hint"><button type="button" class="btn btn-sm" data-act="enable-today-reminders">'+icon('bell','sm')+'Activar avisos antes de mis actividades</button><p>Los avisos locales funcionan con Brújula abierta. Con la app cerrada se requiere la opción de notificaciones push en Ajustes.</p></div>':'';
+  return '<section class="today-focus-grid" aria-label="Pendientes y recomendaciones de hoy">'+
+    '<div class="panel focus-card"><div class="section-head"><h2>'+icon('list-todo','sm')+'Hoy pendiente <span class="count-badge">'+pending.length+'</span></h2></div>'+pastNote+pendingHtml+'</div>'+
+    '<div class="panel focus-card"><div class="section-head"><h2>'+icon('compass','sm')+'Qué hacer ahora</h2></div>'+
+      '<div class="focus-recommend"><span class="chip">Hora actual: '+toHHMM(now)+'</span><h3>'+esc(title)+'</h3><p class="muted small">'+esc(desc)+'</p>'+action+'</div>'+
+      '<p class="focus-hint">Puedes marcar las actividades completadas con ✓. Tu horario no se modifica sin tu acción.</p>'+promptReminders+'</div>'+
+    '</section>';
+}
+
 export function render(c) {
   const s = c.state;
   const f = computeFocus(s, c.now);
@@ -215,7 +264,7 @@ export function render(c) {
     ${f.load.studyMin && !f.load.overloaded ? `<p class="small muted" style="margin-top:-6px">${esc(fmtDuration(f.load.studyMin))} de estudio hoy · tu límite es ${esc(fmtDuration(f.load.maxStudy))}</p>` : ''}
     ${f.load.overloaded ? `<div class="notice warn">${icon('triangle-alert')}<div>Hoy tienes <b>${esc(fmtDuration(f.load.studyMin))}</b> de estudio, más que tu límite de ${esc(fmtDuration(f.load.maxStudy))}. Considera mover algo.</div></div>` : ''}
     <div class="panel">${courseLine(f, s)}</div></section>`;
-  return `<div class="today">${banners(s)}
+  return `<div class="today">${banners(s)}${todayDashboard(f,s)}
     <div class="today-grid"><div class="stack-lg">${rumbo(f, s)}${decide}${line}${comingSoon(s,c.today)}</div>
     <div class="today-side">${priorities}${evalCards(f)}${habitsToday(s, f.today)}${miniWeek(s,c.today)}</div></div>
   </div>`;
@@ -223,6 +272,12 @@ export function render(c) {
 
 // ——— Acciones de esta pantalla ———
 action('outcome', (el) => { haptic(); return setOutcome(el.dataset.id, el.dataset.status); });
+action('enable-today-reminders', async () => {
+  const {enableReminders}=await import('../features/reminders.js');
+  const r=await enableReminders(true);
+  const {toast}=await import('../ui/feedback.js');
+  toast(r.ok?'Avisos activados para las actividades próximas.':r.message,{tone:r.ok?'ok':'warn',duration:6200});
+});
 action('move', (el) => proposeMove(el.dataset.id));
 action('habit', (el) => { haptic(); toggleHabit(el.dataset.date, el.dataset.habit); });
 action('all-decisions', () => openDecisionsSheet());

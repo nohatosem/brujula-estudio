@@ -771,3 +771,24 @@ a.course-tag:hover { color: var(--ink); }
 .qa-ai-actions{padding-top:7px;border-top:1px solid var(--line-2)}
 .qa-ai-actions .btn{flex:1;min-width:135px}
 @media (max-width:480px){.mini-week-row{gap:7px}.mini-time{min-width:86px}.qa-ai-actions{flex-direction:column;align-items:stretch}.qa-ai-actions .btn{width:100%}}
+
+
+/* Brújula 4.2.3 · dos paneles superiores para tareas y recomendaciones */
+.today-focus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s4);margin:0 0 var(--s6)}
+.focus-card{padding:var(--s4);min-width:0}
+.focus-card .section-head{margin-bottom:10px}
+.focus-card .section-head h2{font-size:var(--fs-17);display:flex;align-items:center;gap:6px}
+.focus-card .section-head .count-badge{margin-left:4px}
+.focus-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-2)}
+.focus-item:last-child{border-bottom:0}
+.focus-item-time{font-size:var(--fs-13);color:var(--ink-2);min-width:43px;font-variant-numeric:tabular-nums}
+.focus-item-body{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.focus-item-body b{font-size:var(--fs-14);font-weight:600;overflow-wrap:anywhere}
+.focus-item-body small{font-size:var(--fs-12);color:var(--ink-2)}
+.focus-check{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;background:var(--surface-2);border:1px solid var(--line);border-radius:50%;color:var(--ink);cursor:pointer}
+.focus-check:hover,.focus-check:focus-visible{color:var(--ok,#238259);border-color:currentColor}
+.focus-recommend{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:10px 2px}
+.focus-recommend h3{font-size:var(--fs-19);line-height:1.25;margin:0}
+.focus-recommend p{margin:0}
+.focus-hint{margin:8px 0 0;font-size:var(--fs-12);color:var(--ink-2);line-height:1.5}
+@media(max-width:700px){.today-focus-grid{grid-template-columns:minmax(0,1fr)}}
