@@ -9,7 +9,7 @@
 
   function sessionGuard() {
     const id = (typeof cloud !== "undefined" && cloud.user && cloud.user.id) || "";
-    if (owner !== id) { owner = id; turns = []; lastAnswer = ""; }
+    if (owner !== id) { owner = id; turns = []; lastAnswer = ""; window.dispatchEvent(new CustomEvent("brujula-ai-account-change", {detail:{userId:id}})); }
     return !!id;
   }
 
@@ -64,6 +64,7 @@
     const share = $("brujulaAiShareSchedule");
     if (!input) return;
     const message = input.value.trim();
+    const sentFor = owner;
     if (!message) { show("Escribe primero tu pregunta.", "error"); return; }
     if (message.length > 1800) { show("La pregunta debe tener 1.800 caracteres o menos.", "error"); return; }
     if (!consent || !consent.checked) {
@@ -87,13 +88,16 @@
         throw Error(detail || error.message || "No se pudo contactar con Gemini.");
       }
       if (!data || typeof data.reply !== "string") throw Error(data?.error || "Respuesta inválida.");
+      if (!sessionGuard() || owner !== sentFor) throw Error("La sesión cambió; no se muestra la respuesta anterior.");
       turns.push({role:"user",text:message},{role:"model",text:data.reply});
       turns = turns.slice(-12);
       lastAnswer = data.reply;
       input.value = "";
       show("Respuesta recibida · " + String(data.remaining || 0) + " consultas restantes hoy.");
+      window.dispatchEvent(new CustomEvent("brujula-ai-response", {detail:{reply:data.reply,userId:owner}}));
     } catch (err) {
       show(err.message || "Ocurrió un error. Inténtalo nuevamente.", "error");
+      window.dispatchEvent(new CustomEvent("brujula-ai-error", {detail:{message:err.message||"Error desconocido",userId:owner}}));
     } finally {
       busy = false;
       paint();
@@ -129,5 +133,5 @@
     }
   });
   observer.observe(document.body, {subtree:true,childList:true});
-  window.brujulaAi = {refresh:paint};
+  window.brujulaAi = {refresh:paint, ask, getUserId:()=>owner, isBusy:()=>busy};
 })();
