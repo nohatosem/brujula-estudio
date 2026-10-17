@@ -66,14 +66,14 @@ function series(state,v,weekday){
    &&(sub?norm(b.title).includes(norm(sub[1])):norm(v).includes(norm(b.title))));
  const ids=[...new Set(matches.map(b=>b.seriesId))];
  if(ids.length!==1)return {error:ids.length?'Hay varias rutinas parecidas; menciona el nombre y día.':'No encontré esa rutina futura. Menciona el nombre y día.'};
- return {items:state.blocks.filter(b=>b.seriesId===ids[0]&&b.date>=today&&b.status!=='mastered')};
+ return {items:state.blocks.filter(b=>b.seriesId===ids[0]&&b.date>=today&&b.status!=='mastered'&&(weekday==null||weekdayIndex(b.date)===weekday))};
 }
 /** Nunca muta el estado. Devuelve null si no es una orden repetitiva. */
 export function draftRecurring(raw,state,now=new Date()){
  const v=norm(raw),days=getDays(v),remove=REM.test(v),move=MOV.test(v);
  if(!days.length||!(/\b(todos|cada|semanal|fij[oa]|meses|rutina|los (lunes|martes|miercoles|jueves|viernes|sabado|domingo))\b/.test(v)||remove||move))return null;
  if(remove||move){
-  const found=series(state,v,days[0]);if(found.error)return {error:found.error};
+  const found=series(state,v,remove&&days.length>1?null:days[0]);if(found.error)return {error:found.error};
   const old=found.items;
   if(remove)return {kind:'remove',ids:old.map(b=>b.id),items:[],message:'Eliminar '+old.length+' sesiones futuras de '+old[0].title+'.'};
   const range=times(v);if(range?.error)return range;
