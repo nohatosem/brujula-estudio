@@ -29,7 +29,8 @@ function minute(v,mer){
 function times(v){
  const m=RANGE.exec(v);if(!m)return null;
  const am=m[2]?.replace(/\s|\./g,'')||'',pm=m[4]?.replace(/\s|\./g,'')||'';
- const a=minute(m[1],am||pm),b=minute(m[3],pm||am);
+ const partOfDay=!am&&!pm&&/\b(tarde|noche)\b/.test(v)?'pm':'';
+ const a=minute(m[1],am||pm||partOfDay),b=minute(m[3],pm||am||partOfDay);
  if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a||b-a>720)return {error:'Revisa la hora: el final debe ser posterior al inicio (máximo 12 horas).'};
  return {start:toHHMM(a),end:toHHMM(b)};
 }
@@ -71,7 +72,7 @@ function series(state,v,weekday){
 /** Nunca muta el estado. Devuelve null si no es una orden repetitiva. */
 export function draftRecurring(raw,state,now=new Date()){
  const v=norm(raw),days=getDays(v),remove=REM.test(v),move=MOV.test(v);
- if(!days.length||!(/\b(todos|cada|semanal|fij[oa]|meses|rutina|los (lunes|martes|miercoles|jueves|viernes|sabado|domingo))\b/.test(v)||remove||move))return null;
+ if(!days.length||!(/\b(todos|cada|semanal|fij[oa]|meses|rutina|lunes a viernes|dias laborables|los (lunes|martes|miercoles|jueves|viernes|sabado|domingo))\b/.test(v)||remove||move))return null;
  if(remove||move){
   const found=series(state,v,remove&&days.length>1?null:days[0]);if(found.error)return {error:found.error};
   const old=found.items;
