@@ -1,0 +1,17 @@
+{
+  "name": "brujula",
+  "version": "4.0.0",
+  "private": true,
+  "description": "Brújula 4.0 · sistema académico y personal (PWA estática para GitHub Pages)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "test:edge": "bun tests/edge/run-edge-tests.ts && bun tests/edge/run-push-tests.ts",
+    "test:edge:deno": "deno run --allow-read --allow-write --allow-env tests/edge/run-edge-tests.ts && deno run --allow-read --allow-write --allow-env tests/edge/run-push-tests.ts",
+    "test:sql": "bash tests/sql/run-sql-tests.sh",
+    "precache": "node tools/precache.mjs",
+    "vapid": "node tools/vapid-keys.mjs"
+  },
+  "license": "UNLICENSED"
+}
