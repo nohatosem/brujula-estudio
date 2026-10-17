@@ -1,4 +1,4 @@
-# Brújula 3.3 — Horario primero
+# Brújula 3.5 — Horario inteligente
 
 Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
 
@@ -63,3 +63,22 @@ Para auditar políticas de Supabase, ejecutar el archivo **VERIFICAR_AISLAMIENTO
 
 ### Sobre escribir desde ChatGPT directamente en Supabase
 Actualizar código desde el plugin GitHub es distinto de modificar información privada. Para autorizar la escritura directa de planes en Supabase, conectar una integración dedicada a Supabase en ChatGPT, con acceso limitado al proyecto y permisos adecuados. No publicar nunca claves administrativas en el HTML, GitHub o conversaciones. Esta integración aún no está habilitada ni verificada y la escritura directa de ChatGPT en los horarios no está activa. La importación revisada de JSON continúa disponible.
+
+## Funciones 3.5
+- **Bienestar → Mi rutina y mis descansos:** guarda horas de despertar/dormir, comida y separación entre actividades por cuenta en Supabase mediante el estado del usuario.
+- **Mi horario:** avisa de actividades que se superponen y permite deshacer una reprogramación reciente cuando no existe un nuevo choque.
+- **Pendientes → Buscar otro momento:** encuentra un hueco respetando preferencias, otras actividades y descansos; nunca guarda una propuesta sin aprobación. Clases, exámenes y actividades dominadas quedan protegidos.
+- **Bienestar → Activar avisos:** recordatorios con notificaciones del navegador unos cinco minutos antes. **Solo mientras la página permanezca abierta** y con permiso. No existen push en segundo plano.
+- **Mi asistente:** chat guiado local para horario, tareas pendientes, cruces y descanso. Admite dictado y lectura del resultado si el navegador soporta Web Speech. **No es un chat con un modelo de IA** ni puede contestar preguntas académicas abiertas.
+- Las opciones de solicitudes para ChatGPT / Supabase permanecen en **Opciones avanzadas**, con propuesta y aprobación manual.
+
+### Por comprobar antes de uso grupal
+- Una solicitud real de ChatGPT en Supabase, con la persona aprobándola desde la app.
+- Prueba de alta, sesión y recuperación con dos cuentas reales y dos navegadores distintos; las políticas de aislamiento RLS ya se probaron con identidades simuladas a nivel de base de datos.
+- Permisos de notificaciones y dictado en Chrome móvil / escritorio.
+- Los complementos 3.5 son mejoras funcionales probadas en navegador simulado. No se ha comprobado el despliegue activo de GitHub Pages desde un navegador del usuario.
+
+### No implementado todavía
+- Chat abierto de IA generativa dentro de Brújula y conversación libre por voz. Esto requiere una conexión autorizada, un backend protegido, controles de privacidad y posibles costes por uso. Una suscripción personal ChatGPT Plus no permite usarla como API compartida.
+- Notificaciones push mientras el navegador está cerrado.
+- Aprendizaje automático con seguimiento autónomo de la persona, procesamiento de PDF y tarjetas inteligentes a partir de documentos.
