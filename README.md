@@ -1,4 +1,4 @@
-# Brújula 3.6 — horario y tutor de IA gratuito
+# Brújula 3.7 — horario y tutor por voz
 
 Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
 
@@ -82,6 +82,21 @@ Actualizar código desde el plugin GitHub es distinto de modificar información 
 - Chat abierto de IA generativa dentro de Brújula y conversación libre por voz. Esto requiere una conexión autorizada, un backend protegido, controles de privacidad y posibles costes por uso. Una suscripción personal ChatGPT Plus no permite usarla como API compartida.
 - Notificaciones push mientras el navegador está cerrado.
 - Aprendizaje automático con seguimiento autónomo de la persona, procesamiento de PDF y tarjetas inteligentes a partir de documentos.
+
+
+## Brújula 3.7: hablar con el tutor
+
+La sección **Mi asistente** ahora incluye dos opciones:
+
+- **🎙 Conversar por voz:** pulsa el botón, concede acceso al micrófono y formula una pregunta. El navegador transcribe la voz, el chat Gemini responde y el navegador lee la respuesta. Al terminar puede volver a escuchar la siguiente pregunta. **⏹ Detener conversación** interrumpe el micrófono y el audio.
+- **🎤 Dictar pregunta:** convierte una intervención hablada en texto, pero espera a que la persona revise el mensaje y pulse **Enviar pregunta**. No envía automáticamente.
+- **🔊 Escuchar:** sigue disponible para leer manualmente la última respuesta.
+- Requiere una cuenta de Brújula iniciada, consentimiento marcado para consultas Gemini, HTTPS, micrófono permitido, y navegador con reconocimiento de voz (en Chrome normalmente se expone como `webkitSpeechRecognition`).
+- El reconocimiento de voz puede usar servicios externos del navegador y transmitir audio para transcribir; la app no guarda grabaciones. La transcripción se envía a Gemini para la respuesta solo con el consentimiento ya definido.
+- La conversación de voz consume **las mismas 15 consultas diarias por usuario / 100 globales** de Gemini; no tiene cuota separada.
+- No afirma funcionar en todos los navegadores. Si no existe SpeechRecognition, dictado y conversación por voz se deshabilitan, pero el chat escrito y la lectura de respuestas permanecen.
+- Se probó la sintaxis y la presencia de los controles en el repositorio. **Todavía se requiere una prueba manual en Chrome real con permiso de micrófono**, ya que la captura de audio necesita interacción del usuario.
+- La voz no cambia el horario: solo propone orientación. Los cambios continúan requiriendo aprobación.
 
 ## Chat con Gemini API (desde Brújula 3.6)
 
