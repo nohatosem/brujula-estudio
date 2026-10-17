@@ -33,7 +33,7 @@ export const DEFAULT_TIMER = { running: false, endAt: 0, remaining: 1500, mode: 
 export const DEFAULT_PREFS = {
   wake: '07:00', sleep: '21:00', breakMins: 15, lunchStart: '12:00', lunchEnd: '13:00', reminders: false, replanMode: 'confirm',
   maxStudyMin: 360, reminderLead: 10, focusMin: 25, breakMin: 5, sessionMin: 45, reviewMin: 25,
-  theme: 'auto', aiConsent: false, aiShareSchedule: false, routineConfirmed: false, pushEnabled: false,
+  theme: 'auto', aiConsent: false, aiShareSchedule: false, aiDirect: false, aiDirectConsentAt: null, routineConfirmed: false, pushEnabled: false,
 };
 
 export const DEFAULT_HABITS = [
