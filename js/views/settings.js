@@ -78,7 +78,8 @@ export function render(c) {
     <section class="set-group" id="ia"><h2>Asistente y privacidad</h2><div class="set-card">
       <label class="switch set-row"><span class="txt"><b>Usar Gemini</b><small>Tus mensajes se envían a Google a través de tu función segura de Supabase. En el nivel gratuito, Google puede usarlos para mejorar sus productos.</small></span><input type="checkbox" data-change="ai-consent" ${p.aiConsent ? 'checked' : ''}></label>
       <label class="switch set-row"><span class="txt"><b>Permitir enviar mi horario</b><small>Necesario para analizar tu semana o proponer cambios. Nunca se envían notas, diario ni contraseñas.</small></span><input type="checkbox" data-change="ai-share" ${p.aiShareSchedule ? 'checked' : ''} ${p.aiConsent ? '' : 'disabled'}></label>
-      <div class="set-pad"><p class="hint">Gemini solo propone: cada cambio se valida en tu dispositivo (cruces, sueño, almuerzo, protegidos) y requiere que pulses «Aplicar». Límite: 15 consultas al día por cuenta.</p></div>
+      <label class="switch set-row"><span class="txt"><b>Asistente directo (beta)</b><small>Dile tu horario una sola vez. Podrá guardar rutinas de 4 meses y cambios seguros sin pedir «Aplicar» cada vez. Deshacer sigue disponible. Gemini necesita los permisos anteriores.</small></span><input type="checkbox" data-change="ai-direct" ${p.aiDirect ? 'checked' : ''}></label>
+      <div class="set-pad"><p class="hint">${p.aiDirect ? 'Modo directo activo. Clases, exámenes, rutinas fijas y descansos se protegen ante cambios automáticos.' : 'Sin este permiso, cada propuesta debe ser aprobada.'} Cuota gratuita de Gemini: hasta 15 consultas por cuenta al día.</p></div>
     </div></section>
 
     <section class="set-group" id="apariencia"><h2>Apariencia</h2><div class="set-card"><div class="set-pad">
@@ -158,6 +159,22 @@ action('push-test', async () => {
 });
 action('ai-consent', (el) => { store.state.preferences = { ...prefs(store.state), aiConsent: el.checked, aiShareSchedule: el.checked ? prefs(store.state).aiShareSchedule : false, aiConsentAt: el.checked ? new Date().toISOString() : null }; commit(); });
 action('ai-share', (el) => setPref('aiShareSchedule', el.checked));
+action('ai-direct', async (el) => {
+  if (el.checked) {
+    const ok = await confirmSheet({
+      title:'Permitir cambios directos del asistente',
+      text:'Una sola autorización. Podrá crear, mover y quitar rutinas que le pidas explícitamente, y aplicar propuestas seguras de Gemini sin confirmar cada vez.',
+      details:'<p class="hint">Las clases, exámenes, rutinas fijas y horas de sueño no se alteran al optimizar automáticamente. Las órdenes explícitas de rutina sí pueden actualizar una serie completa. Siempre puedes deshacer y desactivar el permiso.</p>',
+      confirm:'Activar modo directo', cancel:'Ahora no'
+    });
+    if (!ok) { el.checked = false; return; }
+  }
+  store.state.preferences = { ...prefs(store.state), aiDirect:el.checked,
+    aiDirectConsentAt:el.checked?new Date().toISOString():null };
+  commit();
+  toast(el.checked?'Asistente directo activado.':'Cambios directos desactivados.', {tone:'ok'});
+});
+
 action('theme', (el) => { device.set({ theme: el.dataset.theme }); applyTheme(el.dataset.theme); import('../core/store.js').then((m) => m.notify('ui')); });
 action('cloud-pull', async () => {
   if (!(await confirmSheet({ title: 'Recuperar de la nube', text: 'Reemplaza el plan de este dispositivo por el de tu cuenta. Guardo una copia de lo que tienes aquí.', confirm: 'Recuperar' }))) return;
