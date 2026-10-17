@@ -228,6 +228,8 @@ function voiceStopRecording(){
  if(voice.recorder&&voice.recorder.state!=='inactive'){voice.recorder.stop()}
  if(voice.stream){voice.stream.getTracks().forEach(t=>t.stop());voice.stream=null}
  clearTimeout(voice.timer);
+ const start=$('[data-action="voice-record-start"]'),stop=$('[data-action="voice-record-stop"]');
+ if(start)start.disabled=false;if(stop)stop.disabled=true;
 }
 async function voiceReadLesson(b){
  if(!('speechSynthesis' in window)){toast('Este navegador no permite leer texto en voz alta.');return}
