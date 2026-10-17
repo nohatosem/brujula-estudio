@@ -150,7 +150,7 @@ function askRecurring(raw){
   return true;
 }
 
-function runAction(a, el) {
+async function runAction(a, el) {
   if (!a) return;
   if (a.href) { closeAssistant(); return; }
   if (a.say) { void send(a.say); return; }
