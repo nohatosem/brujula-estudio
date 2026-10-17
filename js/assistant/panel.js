@@ -277,8 +277,14 @@ async function runAI(text, intent) {
     }
     status(quotaText());
   } catch (e) {
-    push({ who: 'bot', src: 'error', text: e.message || 'No se pudo completar la consulta.', actions: intent === 'analyze' ? [{ label: 'Ver análisis local', act: 'local-analysis' }] : [] });
-    status('');
+    const message=e.message||'No se pudo completar la consulta.';
+    const limit=/cuota|límite|limite|rate.limit|too many|429|quota|resource.exhausted/i.test(message);
+    push({ who:'bot',src:'error',
+      text:limit?'Gemini alcanzó un límite de consultas. No se puede saltar la cuota del proveedor ni prometer uso ilimitado. Puedes seguir organizando y revisando tu horario con las herramientas locales de Brújula, sin consumir Gemini.':message,
+      actions:limit?[{label:'Planificar sin Gemini',act:'as-week'},{label:'Ver análisis local',act:'local-analysis'}]:
+        intent==='analyze'?[{label:'Ver análisis local',act:'local-analysis'}]:[]
+    });
+    status(limit?'Planificación local disponible sin cuota de Gemini.':'');
     if (voiceState().conversation) stopVoice('Se pausó la conversación por un error.');
   } finally { st.busy = false; paint(); }
 }
