@@ -1,5 +1,14 @@
 # Pruebas de Brújula
 
+## Actualización 4.2.5 · 17 de octubre de 2026
+
+- **35 pruebas unitarias correctas**, incluidas horas a las 05:00, duplicados de rutinas personales, edición con conservación de IDs/notas/clases/realizadas, rechazo de cambios imposibles y recuperación de preferencias al deshacer.
+- **9 comprobaciones de Hoy/PWA correctas**, reutilizando el recorrido anterior con la versión actual.
+- **5 comprobaciones adicionales en Chromium correctas**, con una copia local autorizada de un plan de más de 1.100 actividades: carga completa, vistas separadas, edición conjunta en móvil, sincronización/recarga/Deshacer y voz española con síntesis simulada. El servidor de estas pruebas se simula en memoria y no recibe llamadas de red reales.
+- La prueba de voz valida selección de idioma y rechazo de voces inglesas; no sustituye la prueba del sonido físico en el dispositivo del usuario.
+
+Ejecutar `npm test`, `npm run test:today` y `npm run test:routine`. `BRUJULA_SETUP_STATE_FILE` es opcional y permite utilizar una copia local sin incluirla en el repositorio.
+
 ## Actualización 4.2.4 · 17 de octubre de 2026
 
 - **29 pruebas unitarias correctas**, incluidas la selección de los siete días exportados y la conservación de comillas, notas y texto que podría interpretarse como fórmula en un CSV.

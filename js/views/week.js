@@ -18,6 +18,8 @@ import { openBlockDetail } from '../ui/details.js';
 import { undo, notify } from '../core/store.js';
 
 let selected = null;
+let scheduleView = 'all';
+const visibleBlocks = (blocks,view) => blocks.filter(b=>view==='all'||(view==='personal'?b.kind==='personal':b.kind!=='personal'));
 const HH = 52; // px por hora en la cuadrícula
 
 function anchorDate(c) {
@@ -56,10 +58,10 @@ function dayStrip(days, sel, today, s) {
   }).join('')}</div>`;
 }
 
-function agenda(date, s, rules, conflictIds) {
+function agenda(date, s, rules, conflictIds, allBlocks=s.blocks) {
   const today = todayISO();
   const blocks = dayBlocks(s.blocks, date);
-  const ctx = { blocks: s.blocks, rules, now: new Date() };
+  const ctx = { blocks: allBlocks, rules, now: new Date() };
   const study = studyMinutesOn(s.blocks, date);
   const head = `<div class="day-head"><h3>${esc(cap(fmtLong(date)))}</h3></div>
     <p class="small muted">☀️ Día desde ${toHHMM(rules.wake)} · 🍽️ Almuerzo protegido ${toHHMM(rules.lunch[0])}–${toHHMM(rules.lunch[1])} · 🌙 Descanso desde ${toHHMM(rules.sleep)}</p>
@@ -140,6 +142,7 @@ export function render(c) {
   const anchor = anchorDate(c);
   const days = weekDays(anchor);
   const sel = days.includes(selected) ? selected : days.includes(c.today) ? c.today : days[0];
+  const visible={...s,blocks:visibleBlocks(s.blocks,scheduleView)};
   selected = sel;
   const cl = conflicts(s.blocks).filter((x) => days.includes(x.a.date));
   const conflictIds = new Set(cl.flatMap((x) => [x.a.id, x.b.id]));
@@ -153,13 +156,14 @@ export function render(c) {
       ${cl.length ? `<span class="chip urgent">${icon('triangle-alert', 'sm')}${plural(cl.length, 'cruce', 'cruces')}</span>` : ''}
       <button type="button" class="btn btn-sm" data-act="daily-routine">${icon('sunrise', 'sm')}Rutina diaria</button>
       <button type="button" class="btn btn-sm" data-act="plan-week" title="Organizar varias sesiones de estudio en los huecos libres">${icon('wand-sparkles', 'sm')}Planificar semana</button>
-      <button type="button" class="icon-btn" data-act="download-week" data-date="${esc(days[0])}" aria-label="Descargar semana como CSV editable" title="Descargar semana · CSV editable">${icon('download', 'sm')}</button>
+      <button type="button" class="icon-btn" data-act="download-week" data-date="${esc(days[0])}" data-scope="${scheduleView}" aria-label="Descargar semana como CSV editable" title="Descargar semana · CSV editable">${icon('download', 'sm')}</button>
       <button type="button" class="btn btn-sm btn-primary" data-act="quick-add" data-date="${esc(sel)}">${icon('plus', 'sm')}Añadir actividad</button>
     </div>
+    <div class="seg week-scope" role="group" aria-label="Ver horario">${[['all','Todo'],['academic','Académico'],['personal','Rutina']].map(([value,label])=>`<button type="button" data-act="schedule-view" data-view="${value}" aria-pressed="${scheduleView===value}">${label}</button>`).join('')}</div>
     ${modeCard(s)}
-    ${dayStrip(days, sel, c.today, s)}
-    ${agenda(sel, s, rules, conflictIds)}
-    ${timeGrid(days, s, rules, conflictIds, c.today)}
+    ${dayStrip(days, sel, c.today, visible)}
+    ${agenda(sel, visible, rules, conflictIds,s.blocks)}
+    ${timeGrid(days, visible, rules, conflictIds, c.today)}
   </div>`;
 }
 
@@ -240,9 +244,10 @@ action('pick-day-agenda', (el) => { selected = el.dataset.date; go('semana/' + e
 action('daily-routine', () => import('../ui/daily-routine.js').then(m=>m.openDailyRoutineSheet()).catch(e=>toast(e.message,{tone:'warn'})));
 action('mode', (el) => changeMode(el.dataset.mode));
 action('plan-week', () => planWeekFlow());
+action('schedule-view',el=>{scheduleView=['all','academic','personal'].includes(el.dataset.view)?el.dataset.view:'all';notify('ui');});
 action('download-week', el => {
   const from = isValidDate(el.dataset.date) ? el.dataset.date : todayISO();
-  download('brujula-semana-' + from + '.csv', weekCSV(store.state, from), 'text/csv;charset=utf-8');
+  download('brujula-semana-' + from + '.csv', weekCSV({...store.state,blocks:visibleBlocks(store.state.blocks,el.dataset.scope||'all')}, from), 'text/csv;charset=utf-8');
   toast('Semana descargada. Puedes editar el CSV en Excel o Google Sheets.');
 });
 action('undo-last', () => { const r = undo(); toast(r.ok ? `Deshecho: ${r.entry.label}` : r.reason, { tone: r.ok ? 'ok' : 'warn' }); });

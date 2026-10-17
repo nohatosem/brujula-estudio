@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { startServer, createMock, launchBrowser, openApp, login } from './harness.mjs';
-import { blankState, newBlock } from '../../js/core/model.js';
+import { blankState, newBlock, APP_VERSION } from '../../js/core/model.js';
 import { addDays } from '../../js/core/dates.js';
 import { routineDefaults } from '../../js/engine/daily-routine.js';
 
@@ -23,7 +23,7 @@ const user = mock.db.addUser('agenda@example.com');
 const state = blankState();
 state.preferences.routineConfirmed = true;
 state.courses.push({id:'fisica', name:'Física I', color:'#3F7CAC', difficulty:3, importance:4});
-for (let i = 0; i < 7; i++) for (const t of routineDefaults(state)) {
+for (let i = 0; i < 7; i++) for (const t of routineDefaults(state).filter(t=>t.enabled)) {
   state.blocks.push(newBlock({id:t.id+'-'+i, title:t.title, date:addDays('2026-10-19',i),
     start:t.start, end:t.end, kind:'personal', courseId:'vida', origin:'daily-routine',
     semesterFixed:true, routineKey:t.id, ...(t.habitId ? {habitId:t.habitId} : {})}));
@@ -136,15 +136,15 @@ try {
     await offline.context.route('https://fonts.googleapis.com/**', r => r.fulfill({status:200,contentType:'text/css',body:''}));
     await offline.page.goto(server.url+'/index.html', {waitUntil:'domcontentloaded'});
     await login(offline.page,'agenda@example.com');
-    await offline.page.waitForFunction(async() => {
-      const cache = await caches.open('brujula-app-v4.2.4');
+    await offline.page.waitForFunction(async(version) => {
+      const cache = await caches.open('brujula-app-v'+version);
       return (await cache.keys()).length >= 60 && !!navigator.serviceWorker.controller;
-    });
-    const cached = await offline.page.evaluate(async() => {
-      const cache=await caches.open('brujula-app-v4.2.4');
-      return await Promise.all(['./js/ui/activity-tools.js','./js/features/week-export.js','./css/brujula.css?v=4.2.4']
+    },APP_VERSION);
+    const cached = await offline.page.evaluate(async(version) => {
+      const cache=await caches.open('brujula-app-v'+version);
+      return await Promise.all(['./js/ui/activity-tools.js','./js/features/week-export.js','./css/brujula.css?v='+version]
         .map(async path => !!(await cache.match(path))));
-    });
+    },APP_VERSION);
     assert.deepEqual(cached,[true,true,true]);
     await offline.page.evaluate(async() => {await fetch('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');});
     await offline.page.evaluate(()=>window.brujula.sync.flush());
@@ -152,7 +152,7 @@ try {
     await offline.context.setOffline(true);
     await offline.page.reload({waitUntil:'domcontentloaded'});
     await offline.page.locator('#main .week-overview').waitFor();
-    assert.equal(await offline.page.evaluate(()=>window.brujula.version),'4.2.4');
+    assert.equal(await offline.page.evaluate(()=>window.brujula.version),APP_VERSION);
     assert.ok((await offline.page.locator('#main').innerText()).includes('Traer cuaderno'));
     pass('PWA: versión, estilos y módulos nuevos en caché; abre sin conexión con las notas guardadas');
   } finally {mock.db.offline=false;await offline.context.close();}
