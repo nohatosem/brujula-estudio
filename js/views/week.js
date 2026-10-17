@@ -61,6 +61,7 @@ function agenda(date, s, rules, conflictIds) {
   const ctx = { blocks: s.blocks, rules, now: new Date() };
   const study = studyMinutesOn(s.blocks, date);
   const head = `<div class="day-head"><h3>${esc(cap(fmtLong(date)))}</h3></div>
+    <p class="small muted">☀️ Día desde ${toHHMM(rules.wake)} · 🍽️ Almuerzo protegido ${toHHMM(rules.lunch[0])}–${toHHMM(rules.lunch[1])} · 🌙 Descanso desde ${toHHMM(rules.sleep)}</p>
     ${study ? `<p class="small muted">${esc(fmtDuration(study))} de estudio${study > rules.maxStudy ? ` · <b style="color:var(--alert)">supera tu límite de ${esc(fmtDuration(rules.maxStudy))}</b>` : ''}</p>` : ''}`;
   if (!blocks.length) return `<section class="day-agenda stack">${head}${emptyState({ title: date < today ? 'No hubo actividades' : 'Día libre', text: date < today ? '' : 'Toca «Añadir» o escribe en el + lo que quieras planificar.', action: date >= today ? 'quick-add' : '', actionLabel: 'Planificar' }).replace('data-act="quick-add"', `data-act="quick-add" data-date="${esc(date)}"`)}</section>`;
   const free = date >= today ? freeWindows(ctx, date, 45) : [];
@@ -149,6 +150,7 @@ export function render(c) {
       <a class="btn btn-sm" href="#/semana/${next}" aria-label="Semana siguiente">${icon('chevron-right')}</a>
       <span class="grow"></span>
       ${cl.length ? `<span class="chip urgent">${icon('triangle-alert', 'sm')}${plural(cl.length, 'cruce', 'cruces')}</span>` : ''}
+      <button type="button" class="btn btn-sm" data-act="daily-routine">${icon('sunrise', 'sm')}Rutina diaria</button>
       <button type="button" class="btn btn-sm" data-act="plan-week">${icon('wand-sparkles', 'sm')}Planificar semana</button>
       <button type="button" class="btn btn-sm btn-primary" data-act="quick-add" data-date="${esc(sel)}">${icon('plus', 'sm')}Añadir</button>
     </div>
@@ -233,6 +235,7 @@ export function mount(root) {
 
 action('pick-day', (el) => { selected = el.dataset.date; notify('ui'); });
 action('pick-day-agenda', (el) => { selected = el.dataset.date; go('semana/' + el.dataset.date); });
+action('daily-routine', () => import('../ui/daily-routine.js').then(m=>m.openDailyRoutineSheet()).catch(e=>toast(e.message,{tone:'warn'})));
 action('mode', (el) => changeMode(el.dataset.mode));
 action('plan-week', () => planWeekFlow());
 action('undo-last', () => { const r = undo(); toast(r.ok ? `Deshecho: ${r.entry.label}` : r.reason, { tone: r.ok ? 'ok' : 'warn' }); });
