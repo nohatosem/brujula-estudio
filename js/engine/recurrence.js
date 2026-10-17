@@ -30,7 +30,7 @@ function times(v){
  const m=RANGE.exec(v);if(!m)return null;
  const am=m[2]?.replace(/\s|\./g,'')||'',pm=m[4]?.replace(/\s|\./g,'')||'';
  const a=minute(m[1],am||pm),b=minute(m[3],pm||am);
- if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a||b-a>300)return {error:'Revisa la hora: el final debe ser posterior al inicio (máximo 5 horas).'};
+ if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a||b-a>720)return {error:'Revisa la hora: el final debe ser posterior al inicio (máximo 12 horas).'};
  return {start:toHHMM(a),end:toHHMM(b)};
 }
 function endDate(start){
@@ -46,7 +46,7 @@ function about(v,sub){
 function course(state,sub,kind){
  const a=(state.courses||[]).filter(c=>!c.archived);
  if(kind==='personal')return a.find(c=>/\b(vida|bienestar|personal)\b/.test(norm(c.name)))?.id||'vida';
- if(sub){const c=a.find(c=>norm(c.name).includes(norm(sub[1]))||norm(sub[1]).includes(norm(c.name)));if(c)return c.id;}
+ if(sub){const c=a.find(c=>norm(c.name).includes(norm(sub[1]))||norm(sub[1]).includes(norm(c.name)));return c?.id||null;}
  return a.find(c=>c.id==='general')?.id||a[0]?.id||'general';
 }
 function safe(state,now,items,ignore=[]){
@@ -88,14 +88,18 @@ export function draftRecurring(raw,state,now=new Date()){
  if(range.error)return range;
  const sub=subject(v),kind=/\bclases?\b/.test(v)?'class':sub?.[2]||'study';
  const title=about(v,sub),id=gid(),from=todayISO(now),until=endDate(from),items=[];
+ const knownCourse=course(state,sub,kind);
+ const newCourse=!knownCourse&&sub&&kind!=='personal'?{id:gid(),name:sub[1],
+   color:'#3F7CAC',difficulty:3,importance:3,credits:null,archived:false}:null;
+ const courseId=knownCourse||newCourse?.id||'general';
  for(let date=from;date<=until;date=addDays(date,1)){
   if(!days.includes(weekdayIndex(date)))continue;
   if(date===from&&toMin(range.start)<now.getHours()*60+now.getMinutes())continue;
-  items.push(newBlock({...range,date,title,courseId:course(state,sub,kind),kind,
+  items.push(newBlock({...range,date,title,courseId,kind,
     semesterFixed:true,seriesId:id,seriesUntil:until,seriesDays:days,origin:'routine-ai'}));
   if(items.length>126)return {error:'Hay demasiadas repeticiones. Divide la rutina en dos órdenes.'};
  }
  if(!items.length)return {error:'No quedaron fechas futuras para esa rutina.'};
  const bad=safe(state,now,items);if(bad)return {error:bad};
- return {kind:'add',ids:[],items,message:'Crear '+title+' los '+days.map(label).join(', ')+' de '+range.start+' a '+range.end+' hasta '+until+' ('+items.length+' veces).'};
+ return {kind:'add',ids:[],items,newCourse,message:'Crear '+title+' los '+days.map(label).join(', ')+' de '+range.start+' a '+range.end+' hasta '+until+' ('+items.length+' veces).'};
 }
