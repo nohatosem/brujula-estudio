@@ -4,7 +4,10 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#102b3a"><meta name="description" content="Brújula: organiza clases, aprende paso a paso y cuida tu vida.">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Brújula 3.3 · Mi estudio y mi vida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>Brújula 3.4 · Mi estudio y mi vida</title>
 <style>
 :root{--bg:#f5f7f7;--paper:#fff;--ink:#122c3b;--muted:#667785;--line:#e0e8ea;--accent:#147f77;--accent-light:#e2f4ef;--sun:#f5b544;--red:#be534c;--red-light:#fff0ee;--blue:#4873aa;--shadow:0 10px 35px rgba(10,37,53,.06)}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.48}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.42;cursor:not-allowed}a{color:var(--accent)}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #76cbc4;outline-offset:2px}
@@ -19,7 +22,7 @@
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:580px){.pair{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.block,.toast{transition:none!important}}
 
-/* Brújula 3.3 · enfoque en horario y lectura cómoda */
+/* Brújula 3.4 · enfoque en horario y lectura cómoda */
 :root{--bg:#f7f8fa;--paper:#fff;--ink:#16283a;--muted:#617283;--line:#e2e8eb;--accent:#087d75;--shadow:0 3px 18px rgba(16,40,60,.035)}
 body{font-size:15px;line-height:1.55}
 .shell{grid-template-columns:198px minmax(0,1fr)}.main{max-width:1680px;padding-left:clamp(14px,2vw,28px);padding-right:clamp(14px,2vw,28px)}
@@ -89,10 +92,101 @@ h2{font-size:19px}
 @media(max-width:900px){.schedule-workspace{grid-template-columns:1fr}.schedule-side{grid-template-columns:repeat(2,minmax(0,1fr))}.auth-layout{gap:10px}}
 @media(max-width:640px){.schedule-side{grid-template-columns:1fr}.auth-layout{display:block;margin:0}.auth-hero{padding:5px 4px 18px}.auth-hero h1{font-size:30px}.auth-hero p{font-size:14px}.auth-points{margin-top:10px}.auth-card{padding:20px}.workspace-head{align-items:flex-start}.week-panel{padding:14px}.week-cards{min-width:735px}.selected-day{margin-top:10px}.schedule-side .card{padding:16px}}
 
+
+/* BRUJULA-PASTEL-3.4 — tema pastel sin dependencias de Bulma */
+:root{
+  --bg:#faf7fd;--paper:#fffefd;--ink:#39324e;--muted:#716c82;
+  --line:#e7e0ef;--accent:#6954a3;--accent-light:#efe9fc;
+  --sun:#eebf83;--red:#ae536a;--red-light:#fff0f3;--blue:#5984af;
+  --shadow:0 9px 30px rgba(83,63,125,.065);
+  --lavender:#eee7fa;--mint:#e2f4eb;--peach:#fff0e6;--sky:#e7f2fc;
+}
+html{scrollbar-color:#cfc0e8 transparent}
+body{font-family:'Nunito Sans',ui-rounded,'Segoe UI',system-ui,sans-serif;background:radial-gradient(ellipse at 96% 0%,#f1eafd 0%,transparent 38%),radial-gradient(ellipse at 0% 90%,#eaf7f1 0%,transparent 42%),var(--bg);color:var(--ink);font-size:15px}
+h1,h2,h3{font-weight:850;letter-spacing:-.035em;color:var(--ink)}
+p,.subtle,.mini,.kpi-label{color:var(--muted)}
+a{color:#6751a4}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #a495e0;outline-offset:3px}
+.sidebar{background:linear-gradient(170deg,#f0eafd 0%,#f4effd 52%,#e7f5ef 100%);border-right:1px solid #e1d8f1;color:var(--ink)}
+.brandmark{background:#dcd0f5;color:#59478d;box-shadow:0 5px 14px #816cb31c}
+.brand b{color:#3e3656}.brand small{color:#73688c}
+.nav button{color:#655d7b;font-weight:800}
+.nav button:hover{background:#e3d9f6;color:#4d4079}
+.nav button.active{background:#d9cdf3;color:#483977;box-shadow:inset 0 0 0 1px #cdbce9}
+.sidebar-note{background:rgba(255,255,255,.7);border:1px solid #ded4ef;color:#756a88}
+.sidebar-note b{color:#594979}.nav-footer,.nav-hint{color:#817694!important}
+.main{max-width:1680px}
+.card{background:rgba(255,254,255,.97);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.card.soft{background:#eef7f2}
+.topbar{border-bottom:1px solid #eee8f5;padding-bottom:14px}
+.today-chip{background:#fff;border:1px solid #e5dcf1;color:#5d5278}
+.eyebrow{color:#7561ad}
+.btn{background:#fffefd;border-color:#e2dbea;color:#4c415f;border-radius:12px;box-shadow:0 2px 6px rgba(94,72,127,.035)}
+.btn:hover{background:#f5effc;border-color:#cbbde5}
+.btn.primary{background:#6954a3;color:#fff;border-color:#6954a3;box-shadow:0 4px 12px #6954a325}
+.btn.primary:hover{background:#59428f;border-color:#59428f}
+.btn.dark{background:#fff;color:#59468d}
+.btn.ghost{background:transparent;box-shadow:none}
+.btn.danger{background:#fff5f6;color:#a34260;border-color:#f2d9e0}
+.field{background:#fff;border:1px solid #dcd4e9;border-radius:12px;color:var(--ink)}
+.label{color:#55486f}
+.progress{background:#ece5f4}
+.pill{background:#eeeafa;color:#63568c}
+.pill.neutral{background:#f0ecf5;color:#6d6581}
+.pill.review{background:#fff0dc;color:#916019}
+.pill.mastered{background:#e1f4e9;color:#28744f}
+.pill.exam{background:#fee9ed;color:#a44865}
+.pill.paused{background:#f9e9f0;color:#955270}
+.pill.missed{background:#eeeefa;color:#6a638a}
+.hero{background:linear-gradient(120deg,#7d6eb5 0%,#7669b4 44%,#77a8a7 100%);color:#fff;border:0}
+.hero h2,.hero h3{color:#fff}.hero p{color:#faf8ff}
+.block,.course-card,.checkitem,.habitcard,.day{background:#fffefd}
+.block:hover{border-color:#bca7de;background:#fcfaff}
+.block .time{color:#625583}
+.block .arrow{color:#a596c5}
+.day.on,.stepper button.on{background:#6e57aa;border-color:#6e57aa;color:#fff}
+.day.on small,.day.on em{color:#eee7fd}
+.alert{background:#fff6e5;border-color:#f2dfbf;color:#785b28}
+.alert.info{background:#eaf3fc;border-color:#d6e6f6;color:#395e88}
+.lesson-box{background:#f4effc;border-color:#e3d9f4}
+.worked{background:#fdfbff;border-color:#e7def1}
+.timer-panel{background:#edf7f2;border-color:#d7e9e0}
+.habitcard .symbol{background:#f0eaf9}
+.toast{background:#493e68;color:#fff}
+.close{background:#f2ecf9;color:#584876}
+.cloudstatus{background:#eff3fd;border-color:#dfe5f7;color:#4f5486}
+.log-dot{background:#eeeafa;color:#66529e}
+.auth-hero h1{color:#47375e}
+.auth-points span{background:#e8f5ef;color:#456c5a;border:1px solid #d5ebdf}
+.auth-card{background:#fff;box-shadow:0 16px 52px rgba(91,70,145,.1)}
+.week-panel{background:#fffefd}
+.week-scroll{scrollbar-color:#c6b8df #faf7fd}
+.weekday-column{background:#f9f6ff;border:1px solid #e8dff4;border-radius:15px}
+.weekday-column:nth-child(2n){background:#f2faf7;border-color:#dceee6}
+.weekday-column:nth-child(3n){background:#fff7f0;border-color:#f3e7dc}
+.weekday-column:nth-child(4n){background:#f1f6fd;border-color:#e0eafa}
+.weekday-column.selected{background:#eee7fc;border:2px solid #9180c7;box-shadow:0 4px 15px #8f7ab41a}
+.weekday-head>span{color:#675880}
+.weekday-head small{color:#847b97}
+.week-event{background:#e6dff6;color:#483972;border-left:3px solid #9179c5;border-radius:7px 10px 10px 7px}
+.week-event:hover{background:#d9cff2}
+.week-event:nth-child(3n+2){background:#dff2e9;color:#365c50;border-left-color:#88b7a2}
+.week-event:nth-child(3n){background:#ffebe2;color:#865d51;border-left-color:#e5b19f}
+.pending-count{background:#e7def7;color:#65508f}
+.pending-entry{background:#fffdff;border-color:#ebe3f3}
+.pending-entry:hover{border-color:#cbbde5;background:#fdfaff}
+.pending-empty{background:#eaf7f0;color:#44765f}
+.guide-panel{background:linear-gradient(140deg,#f2edfc,#eaf7f1)}
+.guide-symbol{color:#795da5}
+.setup-panel{background:linear-gradient(125deg,#f2edfc,#f0faf4,#fff9f2);border-color:#e4dbee}
+.subject-tag{color:#fff}
+@media(max-width:950px){.sidebar{border-bottom:1px solid #e1d8f1;border-right:0}.nav button.active{background:#d9cdf3}.nav-hint{color:#817694!important}}
+@media(prefers-reduced-motion:reduce){.btn,.weekday-column{transition:none}}
+
 </style>
 </head>
 <body>
-<div class="shell"><aside class="sidebar"><div class="brand"><div class="brandmark">✦</div><div><b>Brújula 3.3</b><small>Aprende. Crece. Disfruta.</small></div></div><nav class="nav" id="nav"><button data-action="view" data-view="inicio"><span class="sym">▦</span>Mi horario</button><button data-action="view" data-view="cursos"><span class="sym">▤</span>Mis cursos</button><button data-action="view" data-view="asistente"><span class="sym">✧</span>Mi asistente</button><button data-action="view" data-view="vida"><span class="sym">♡</span>Bienestar</button><button data-action="view" data-view="datos"><span class="sym">⚙</span>Mi cuenta y datos</button></nav><div class="nav-hint">← Desliza para ver todas las secciones →</div><div class="sidebar-note"><b>Un paso a la vez.</b><br>Si no entiendes un tema, lo marcamos para volver. No tienes que dominarlo todo hoy.</div><div class="nav-footer">Local por defecto · nube opcional y gratuita.</div></aside><main class="main"><header class="topbar"><div><div class="eyebrow">TU ESPACIO PERSONAL</div><div id="pageTitle" style="font-weight:850;font-size:17px"></div></div><div class="top-right"><span class="today-chip" id="todayChip"></span><button class="btn small" data-action="open-block" aria-label="Añadir una actividad">＋ Actividad</button></div></header><div class="content" id="app"></div></main></div>
+<div class="shell"><aside class="sidebar"><div class="brand"><div class="brandmark">✦</div><div><b>Brújula 3.4</b><small>Aprende. Crece. Disfruta.</small></div></div><nav class="nav" id="nav"><button data-action="view" data-view="inicio"><span class="sym">▦</span>Mi horario</button><button data-action="view" data-view="cursos"><span class="sym">▤</span>Mis cursos</button><button data-action="view" data-view="asistente"><span class="sym">✧</span>Mi asistente</button><button data-action="view" data-view="vida"><span class="sym">♡</span>Bienestar</button><button data-action="view" data-view="datos"><span class="sym">⚙</span>Mi cuenta y datos</button></nav><div class="nav-hint">← Desliza para ver todas las secciones →</div><div class="sidebar-note"><b>Un paso a la vez.</b><br>Si no entiendes un tema, lo marcamos para volver. No tienes que dominarlo todo hoy.</div><div class="nav-footer">Local por defecto · nube opcional y gratuita.</div></aside><main class="main"><header class="topbar"><div><div class="eyebrow">TU ESPACIO PERSONAL</div><div id="pageTitle" style="font-weight:850;font-size:17px"></div></div><div class="top-right"><span class="today-chip" id="todayChip"></span><button class="btn small" data-action="open-block" aria-label="Añadir una actividad">＋ Actividad</button></div></header><div class="content" id="app"></div></main></div>
 <dialog id="blockDialog"><div class="modal-inner"><div class="modal-head"><div><div class="eyebrow">PLANIFICA SIN SATURARTE</div><h2 id="blockDialogTitle">Nueva actividad</h2></div><button class="close" data-action="close-dialog" aria-label="Cerrar">×</button></div><form id="blockForm" class="form-grid"><input type="hidden" name="id"><div class="form-group"><label class="label" for="bf-date">Fecha</label><input class="field" type="date" id="bf-date" name="date" required></div><div class="form-group"><label class="label" for="bf-kind">Tipo</label><select class="field" id="bf-kind" name="kind"><option value="study">Estudio</option><option value="class">Clase</option><option value="exam">Examen</option><option value="personal">Vida personal</option></select></div><div class="form-group"><label class="label" for="bf-start">Desde</label><input class="field" type="time" id="bf-start" name="start" required></div><div class="form-group"><label class="label" for="bf-end">Hasta</label><input class="field" type="time" id="bf-end" name="end" required></div><div class="form-group full"><label class="label" for="bf-course">Área o curso</label><select class="field" id="bf-course" name="courseId"></select></div><div class="form-group full"><label class="label" for="bf-title">Tema o actividad</label><input class="field" id="bf-title" name="title" required maxlength="130" placeholder="Ej.: MRU — ejercicios desde cero"></div><div class="form-group full"><label class="label" for="bf-goal">¿Qué quieres conseguir?</label><textarea class="field" id="bf-goal" name="goal" placeholder="Ej.: resolver 3 problemas sin ayuda"></textarea></div><div class="form-group"><label class="label" for="bf-difficulty">Dificultad esperada (1 a 5)</label><select class="field" id="bf-difficulty" name="difficulty"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div><div class="form-group"><label class="label" for="bf-priority">Prioridad</label><select class="field" id="bf-priority" name="priority"><option value="normal">Normal</option><option value="high">Alta</option><option value="critical">Urgente</option></select></div><div class="form-group full"><label class="label" for="bf-intro">Mi explicación o material (opcional)</label><textarea class="field" id="bf-intro" name="intro" placeholder="Una explicación, resumen, referencia o contenido del libro..."></textarea></div><div class="form-group full"><label class="label" for="bf-problem">Enunciado de ejercicio (opcional)</label><textarea class="field" id="bf-problem" name="problem" placeholder="Escribe aquí un problema para practicarlo paso a paso"></textarea></div><div class="form-group full"><label class="label" for="bf-steps">Pasos de solución: una línea por paso (opcional)</label><textarea class="field" id="bf-steps" name="steps" placeholder="Identificar los datos\nSeleccionar la fórmula\nSustituir..." rows="3"></textarea></div><div class="form-group full"><label class="label" for="bf-question">Pregunta de control (opcional)</label><input class="field" id="bf-question" name="question"></div><div class="form-group full"><label class="label" for="bf-answer">Respuesta esperada (opcional)</label><input class="field" id="bf-answer" name="answer"></div><div class="form-group full row between"><button type="button" class="btn danger small" id="deleteBlock" data-action="delete-block">Eliminar actividad</button><div class="row"><button type="button" class="btn" data-action="close-dialog">Cancelar</button><button type="submit" class="btn primary">Guardar actividad</button></div></div></form></div></dialog>
 <dialog id="courseDialog"><div class="modal-inner"><div class="modal-head"><h2>Agregar curso o área</h2><button class="close" data-action="close-dialog">×</button></div><form id="courseForm" class="stack"><label><span class="label">Nombre</span><input class="field" required name="name" placeholder="Ej.: Cálculo II"></label><label><span class="label">Dificultad (1 a 5)</span><select class="field" name="difficulty"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select></label><label><span class="label">Color</span><input class="field" type="color" name="color" value="#147f77"></label><button class="btn primary" type="submit">Crear área</button></form></div></dialog>
 <input type="file" id="backupFile" accept="application/json,.json" class="hidden"><div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -284,7 +378,7 @@ const aiPlan={pending:null};
 function aiSchedulePrompt(){
  const rows=state.blocks.filter(b=>b.date>=shift(nowISO(),-14)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)).slice(0,120);
  const outline=rows.map(b=>({id:b.id,curso:course(b.courseId).name,fecha:b.date,inicio:b.start,fin:b.end,tema:b.title,prioridad:b.priority,estado:b.status}));
- return `Quiero reorganizar mi horario personal de Brújula 3.3. No alteres actividades dominadas ni clases fijas salvo que lo solicite. Protege el descanso y avisa de choques de horario. Haz preguntas si hay ambigüedades. RESPONDE exclusivamente con JSON válido SIN markdown según este formato:\n{"version":1,"changes":[{"action":"add","course":"Mis estudios","date":"2026-10-22","start":"15:00","end":"16:00","title":"Repaso","goal":"Resolver 3 ejercicios","kind":"study","priority":"high","difficulty":4},{"action":"update","id":"ID_REAL","start":"16:00","end":"17:00"},{"action":"delete","id":"ID_REAL"}]}\nPara agregar usa course exacto del listado; para actualizar usa id real de abajo. Incluye SOLO cambios necesarios, no repitas el ejemplo. Si el usuario pide borrar una actividad, solo entonces utiliza delete.\nCURSOS: ${state.courses.map(x=>x.name).join(', ')}\nHORARIO: ${JSON.stringify(outline)}`;
+ return `Quiero reorganizar mi horario personal de Brújula 3.4. No alteres actividades dominadas ni clases fijas salvo que lo solicite. Protege el descanso y avisa de choques de horario. Haz preguntas si hay ambigüedades. RESPONDE exclusivamente con JSON válido SIN markdown según este formato:\n{"version":1,"changes":[{"action":"add","course":"Mis estudios","date":"2026-10-22","start":"15:00","end":"16:00","title":"Repaso","goal":"Resolver 3 ejercicios","kind":"study","priority":"high","difficulty":4},{"action":"update","id":"ID_REAL","start":"16:00","end":"17:00"},{"action":"delete","id":"ID_REAL"}]}\nPara agregar usa course exacto del listado; para actualizar usa id real de abajo. Incluye SOLO cambios necesarios, no repitas el ejemplo. Si el usuario pide borrar una actividad, solo entonces utiliza delete.\nCURSOS: ${state.courses.map(x=>x.name).join(', ')}\nHORARIO: ${JSON.stringify(outline)}`;
 }
 
 async function createAssistantRequest(){
