@@ -10,6 +10,7 @@ import {openProposal} from '../ui/proposal.js';
 import {openSheet,toast} from '../ui/feedback.js';
 import {icon} from '../ui/icons.js';
 import {esc} from '../core/util.js';
+import {copyText} from '../ui/dom.js';
 
 const TABLE='brujula_assistant_requests';
 export async function createChatGPTRequest(instruction='',extras={}){
@@ -38,16 +39,29 @@ export function openChatGPTGuide(request){
     ' en mi proyecto Supabase conectado. Prepara una propuesta JSON con {version:1,changes:[...]} y guarda la propuesta en ESA SOLICITUD. No consultes ni muestres datos de otras cuentas.';
   const sheet=openSheet({title:'Planificar con ChatGPT (beta)',
     body:'<div class="stack"><p>Tu solicitud y los bloques necesarios ya están guardados de forma privada en Supabase. <b>No necesitas copiar tu calendario.</b></p>'+
-      '<div class="notice"><div><b>1.</b> Pulsa «Copiar mensaje y abrir ChatGPT». Pega allí el mensaje corto (solo el ID, no tu calendario).<br><b>2.</b> Cuando ChatGPT haya preparado la propuesta, vuelve aquí y pulsa <b>Buscar propuesta</b>. No se consulta otra cuenta ni responde automáticamente dentro de Brújula.</div></div>'+
+      '<div class="notice"><div><b>1.</b> Pulsa «Copiar mensaje» y luego «Abrir ChatGPT». Pega allí el mensaje corto (solo el ID, no tu calendario).<br><b>2.</b> Cuando ChatGPT haya preparado la propuesta, vuelve aquí y pulsa <b>Buscar propuesta</b>. Si la copia falla, mantén presionado el texto de abajo o selecciónalo con Ctrl+C.</div></div>'+
+      '<label class="field"><span>Mensaje para ChatGPT (puedes seleccionarlo manualmente)</span><textarea class="textarea" data-gpt-message rows="5" readonly spellcheck="false" aria-label="Mensaje para copiar en ChatGPT">'+esc(instruction)+'</textarea></label>'+ 
       '<p class="small muted">Solicitud '+esc(request.id.slice(0,8))+' · expira '+esc(new Date(request.expires_at).toLocaleString('es-PE'))+'. Es una integración beta, sin API de OpenAI ni cargos nuevos.</p></div>',
     foot:'<button type="button" class="btn" data-sheet-close>Cerrar</button>'+
-      '<button type="button" class="btn btn-soft" data-open-gpt>Copiar mensaje y abrir ChatGPT</button>'+
+      '<button type="button" class="btn btn-soft" data-copy-gpt>Copiar mensaje</button>'+ 
+      '<button type="button" class="btn btn-soft" data-open-gpt>Abrir ChatGPT</button>'+
       '<button type="button" class="btn btn-primary" data-load-plan>Buscar propuesta</button>',
     onMount(card){
+      const field=card.querySelector('[data-gpt-message]');
+      field?.addEventListener('click',()=>field.select());
+      card.querySelector('[data-copy-gpt]')?.addEventListener('click',async()=>{
+        const btn=card.querySelector('[data-copy-gpt]');
+        const ok=await copyText(instruction);
+        if(ok){
+          btn.textContent='✓ Copiado';
+          toast('Mensaje copiado. Ahora abre ChatGPT y pégalo.',{tone:'ok'});
+        }else{
+          field?.focus();
+          field?.select();
+          toast('Tu navegador bloqueó la copia. El mensaje quedó seleccionado: usa Ctrl+C o mantén pulsado para copiar.',{tone:'warn',duration:8000});
+        }
+      });
       card.querySelector('[data-open-gpt]')?.addEventListener('click',()=>{
-        navigator.clipboard?.writeText(instruction).catch(()=>{
-          toast('No se pudo copiar: revisa los permisos de portapapeles.',{tone:'warn'});
-        });
         window.open('https://chatgpt.com/','_blank','noopener,noreferrer');
       });
       card.querySelector('[data-load-plan]')?.addEventListener('click',async()=>{
