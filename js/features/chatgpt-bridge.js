@@ -80,13 +80,26 @@ export async function createChatGPTRequest(instruction='',extras={}){
 export function openChatGPTGuide(request){
   const instruction = 'Brújula: consulta exclusivamente la solicitud con ID '+request.id+
     ' en mi proyecto Supabase conectado. Prepara una propuesta JSON con {version:1,changes:[...]} y guarda la propuesta en ESA SOLICITUD. No consultes ni muestres datos de otras cuentas.';
+  const st=store.state,from=todayISO(),to=addDays(from,14);
+  const manualContext={
+    courses:st.courses.filter(c=>!c.archived).slice(0,20).map(c=>({id:c.id,name:c.name})),
+    blocks:st.blocks.filter(b=>b.date>=from&&b.date<=to).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start))
+      .slice(0,70).map(b=>({date:b.date,start:b.start,end:b.end,title:b.title,kind:b.kind,courseId:b.courseId,status:b.status})),
+    preferences:{wake:prefs(st).wake,sleep:prefs(st).sleep,lunchStart:prefs(st).lunchStart,lunchEnd:prefs(st).lunchEnd,breakMins:prefs(st).breakMins}
+  };
+  const manualPrompt='Ayúdame a planificar la próxima semana en Brújula. Respeta las clases, el almuerzo, el descanso y las actividades existentes. '+
+    'Devuélveme únicamente JSON con {version:1,changes:[...]} (máximo 12 cambios). '+
+    'Cada cambio nuevo debe tener action:"add", courseId válido, date YYYY-MM-DD, start HH:MM, end HH:MM, title, kind:"study" o "personal", priority:"normal" o "high", difficulty de 1 a 5. '+
+    'No borres actividades. DATOS: '+JSON.stringify(manualContext);
   const sheet=openSheet({title:'Planificar con ChatGPT (beta)',
-    body:'<div class="stack"><p>Tu solicitud y los bloques necesarios ya están guardados de forma privada en Supabase. <b>No necesitas copiar tu calendario.</b></p>'+
+    body:'<div class="stack"><p>Tu solicitud se guardó en Supabase. <b>El enlace privado funciona únicamente en ChatGPT con acceso autorizado a este proyecto.</b> Las cuentas de otros usuarios no heredan esa conexión.</p>'+
       '<div class="notice"><div><b>1.</b> Pulsa «Copiar mensaje» y luego «Abrir ChatGPT». Pega allí el mensaje corto (solo el ID, no tu calendario).<br><b>2.</b> Cuando ChatGPT haya preparado la propuesta, vuelve aquí y pulsa <b>Buscar propuesta</b>. Si la copia falla, mantén presionado el texto de abajo o selecciónalo con Ctrl+C.</div></div>'+
       '<label class="field"><span>Mensaje para ChatGPT (puedes seleccionarlo manualmente)</span><textarea class="textarea" data-gpt-message rows="5" readonly spellcheck="false" aria-label="Mensaje para copiar en ChatGPT">'+esc(instruction)+'</textarea></label>'+ 
+      '<p class="small muted">¿Usas otra cuenta de ChatGPT sin este conector? Pulsa «Sin conector». Se copiará un resumen de tus datos para pedirle un JSON y podrás pegarlo en Ajustes → Avanzado → Pegar propuesta JSON.</p>'+ 
       '<p class="small muted">Solicitud '+esc(request.id.slice(0,8))+' · expira '+esc(new Date(request.expires_at).toLocaleString('es-PE'))+'. Es una integración beta, sin API de OpenAI ni cargos nuevos.</p></div>',
     foot:'<button type="button" class="btn" data-sheet-close>Cerrar</button>'+
       '<button type="button" class="btn btn-soft" data-copy-gpt>Copiar mensaje</button>'+ 
+      '<button type="button" class="btn btn-soft" data-manual-gpt>Sin conector</button>'+ 
       '<button type="button" class="btn btn-soft" data-open-gpt>Abrir ChatGPT</button>'+
       '<button type="button" class="btn btn-primary" data-load-plan>Buscar propuesta</button>',
     onMount(card){
@@ -102,6 +115,17 @@ export function openChatGPTGuide(request){
           field?.focus();
           field?.select();
           toast('Tu navegador bloqueó la copia. El mensaje quedó seleccionado: usa Ctrl+C o mantén pulsado para copiar.',{tone:'warn',duration:8000});
+        }
+      });
+      card.querySelector('[data-manual-gpt]')?.addEventListener('click',async()=>{
+        const ok=await copyText(manualPrompt);
+        if(ok){
+          toast('Contexto para ChatGPT copiado. Pégalo en tu ChatGPT y después importa el JSON en Ajustes → Avanzado.',{tone:'ok',duration:9000});
+        }else{
+          const field=card.querySelector('[data-gpt-message]');
+          field.value=manualPrompt;
+          field.focus();field.select();
+          toast('Selecciona el mensaje de la casilla y cópialo manualmente.',{tone:'warn',duration:8000});
         }
       });
       card.querySelector('[data-open-gpt]')?.addEventListener('click',()=>{
