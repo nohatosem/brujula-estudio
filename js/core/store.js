@@ -144,6 +144,11 @@ export function undo(entryId) {
   for (const t of entry.topicsBefore || []) { const i = s.topics.findIndex((x) => x.id === t.id); if (i >= 0) s.topics[i] = clone(t); else s.topics.push(clone(t)); }
   s.evaluations = s.evaluations.filter((e) => !(entry.createdEvalIds || []).includes(e.id));
   for (const e of entry.evalsBefore || []) { const i = s.evaluations.findIndex((x) => x.id === e.id); if (i >= 0) s.evaluations[i] = clone(e); else s.evaluations.push(clone(e)); }
+  // Mantener en Vida el mismo estado que las sesiones personales restauradas.
+  for(const b of entry.before||[]){
+    if(!b.habitId || !s.habits[b.date])continue;
+    s.habits[b.date][b.habitId]=s.blocks.some(x=>x.date===b.date&&x.habitId===b.habitId&&x.status==='mastered');
+  }
   s.undo = s.undo.filter((e) => e.id !== entry.id);
   pushEvent(s, makeEvent(s, { status: 'progress', type: 'undo', title: entry.label, course: 'Brújula', reason: 'Se deshizo el cambio' }));
   // Compatibilidad 3.9: su botón «Deshacer» usa estos campos.
