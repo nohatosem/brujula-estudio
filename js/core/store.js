@@ -102,15 +102,17 @@ export function change({ label, type = 'change', blockIds = [], topicIds = [], e
   const topicsBefore = topicIds.map((id) => s.topics.find((t) => t.id === id)).filter(Boolean).map((t) => clone(t));
   const evalsBefore = evaluationIds.map((id) => s.evaluations.find((e) => e.id === id)).filter(Boolean).map((e) => clone(e));
   const existing = new Set(s.blocks.map((b) => b.id));
+  const existingCourses = new Set((s.courses || []).map((c) => c.id));
   const existingTopics = new Set(s.topics.map((t) => t.id));
   const existingEvals = new Set(s.evaluations.map((e) => e.id));
   const result = mutate(s);
   const createdIds = s.blocks.filter((b) => !existing.has(b.id)).map((b) => b.id);
+  const createdCourseIds = (s.courses || []).filter(c=>!existingCourses.has(c.id)).map(c=>c.id);
   const createdTopicIds = s.topics.filter((t) => !existingTopics.has(t.id)).map((t) => t.id);
   const createdEvalIds = s.evaluations.filter((e) => !existingEvals.has(e.id)).map((e) => e.id);
   const prints = {};
   for (const id of [...blockIds, ...createdIds]) prints[id] = print(s.blocks.find((b) => b.id === id));
-  const entry = { id: gid(), at: new Date().toISOString(), label, type, before, createdIds, topicsBefore, createdTopicIds, evalsBefore, createdEvalIds, prints };
+  const entry = { id: gid(), at: new Date().toISOString(), label, type, before, createdIds, createdCourseIds, topicsBefore, createdTopicIds, evalsBefore, createdEvalIds, prints };
   s.undo = [entry, ...(s.undo || [])].slice(0, UNDO_LIMIT);
   if (event) pushEvent(s, makeEvent(s, event));
   commit({ render });
@@ -133,6 +135,7 @@ export function undo(entryId) {
   const check = canUndo(entry);
   if (!check.ok) return check;
   s.blocks = s.blocks.filter((b) => !entry.createdIds.includes(b.id));
+  if(entry.createdCourseIds?.length) s.courses = s.courses.filter(c=>!entry.createdCourseIds.includes(c.id));
   for (const b of entry.before) {
     const i = s.blocks.findIndex((x) => x.id === b.id);
     if (i >= 0) s.blocks[i] = clone(b); else s.blocks.push(clone(b));
