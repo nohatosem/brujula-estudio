@@ -119,8 +119,8 @@ function timeGrid(days, s, rules, conflictIds, today) {
       const { lane, of } = L.get(b.id);
       const top = px(toMin(b.start)), height = Math.max(22, px(toMin(b.end)) - top - 2);
       const w = 100 / of;
-      return `<button type="button" class="tg-ev ${isFixedKind(b.kind) ? 'fixed' : ''} ${b.status === 'mastered' ? 'done' : ''} ${conflictIds.has(b.id) ? 'conflict' : ''}" style="--c:${esc(c.color)};top:${top}px;height:${height}px;left:calc(${lane * w}% + 3px);right:auto;width:calc(${w}% - 6px)" data-ev="${esc(b.id)}" ${isFlexible(b) ? 'data-drag="1"' : ''} title="${esc(b.title)} · ${esc(fmtRange(b.start, b.end))}">
-        <b>${isFixedKind(b.kind) ? icon('lock', 'sm') : ''}${esc(cut(b.title, 60))}</b><span>${esc(b.start)}–${esc(b.end)}</span></button>`;
+      return `<button type="button" class="tg-ev ${isFixedKind(b.kind) || b.semesterFixed ? 'fixed' : ''} ${b.status === 'mastered' ? 'done' : ''} ${conflictIds.has(b.id) ? 'conflict' : ''}" style="--c:${esc(c.color)};top:${top}px;height:${height}px;left:calc(${lane * w}% + 3px);right:auto;width:calc(${w}% - 6px)" data-ev="${esc(b.id)}" ${isFlexible(b) ? 'data-drag="1"' : ''} title="${esc(b.title)} · ${esc(fmtRange(b.start, b.end))}${b.semesterFixed ? ' · Rutina fija' : ''}">
+        <b>${(isFixedKind(b.kind)||b.semesterFixed) ? icon('lock', 'sm') : ''}${esc(cut(b.title, 60))}</b><span>${esc(b.start)}–${esc(b.end)}</span></button>`;
     }).join('');
     const nowLine = d === today && nowM >= h0 * 60 && nowM <= h1 * 60 ? `<div class="tg-now" style="top:${px(nowM)}px"></div>` : '';
     return `<div class="tgrid-col ${d === today ? 'is-today' : ''}" data-col="${d}" style="height:${(h1 - h0) * HH}px">${rest}${evs}${nowLine}</div>`;
