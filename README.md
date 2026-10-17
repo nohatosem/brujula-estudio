@@ -1,6 +1,18 @@
-# Brújula 3.0 — Horarios personales
+# Brújula 3.3 — Horario primero
 
 Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
+
+## Mejoras 3.3
+- Al entrar por el enlace público se muestra inicio de sesión / creación de cuenta. Los datos de otra cuenta no se muestran en el navegador antes de autenticarse.
+- Después de entrar, la pantalla principal es un horario semanal de lunes a domingo. La columna lateral presenta pendientes y una guía sencilla.
+- Los usuarios nuevos reciben ayuda para agregar actividades, crear cursos o preparar con su propia cuenta de ChatGPT un JSON de horario para revisar e importar.
+- Las tareas personales atrasadas pueden marcarse como hechas. Para actividades flexibles se ofrece un nuevo hueco, evitando superposiciones, la comida del mediodía y la franja de descanso 21:00–07:00. Solo se reprograma con confirmación explícita del usuario.
+- No se reprograman automáticamente clases, exámenes ni sesiones dominadas. Los límites de descanso son valores de prueba: cada persona debe definir luego su rutina.
+- Se simplificó la navegación y se adaptó la semana al tamaño de pantalla.
+
+**Advertencia sobre IA:** El acceso a ChatGPT Plus no autoriza compartir una cuenta con cinco personas ni alimenta automáticamente un chat dentro de esta web. Para consultas abiertas cada usuario debe usar su propia cuenta; una integración de chat integrada requeriría un backend y credenciales separadas y protegidas. Las solicitudes temporales de Supabase todavía no son una integración multiusuario segura para terceros.
+
+**Límites de prueba:** El rediseño y la reprogramación se probaron en un navegador automatizado con datos de demostración. El alta/inicio de sesión real, sincronización y aislamiento deben verificarse con dos cuentas reales antes de compartir con invitados.
 
 ## Para cada persona
 1. Abrir la web publicada en GitHub Pages.
