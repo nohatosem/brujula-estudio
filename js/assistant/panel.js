@@ -126,7 +126,10 @@ function saveRecurring(raw, savedAt = null) {
   const { entry } = change({
     label:plan.message,type:'recurring',blockIds:touched,
     mutate(state) {
-      if(plan.kind === 'add')state.blocks.push(...plan.items);
+      if(plan.kind === 'add'){
+        if(plan.newCourse&&!state.courses.some(c=>c.id===plan.newCourse.id))state.courses.push(plan.newCourse);
+        state.blocks.push(...plan.items);
+      }
       else if(plan.kind === 'remove')state.blocks=state.blocks.filter(b=>!touched.includes(b.id));
       else if(plan.kind === 'move')for(const next of plan.items){
         const b=state.blocks.find(x=>x.id===next.id); if(b)Object.assign(b,next);
