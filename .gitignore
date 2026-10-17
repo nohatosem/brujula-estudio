@@ -1,0 +1,9 @@
+# Archivos temporales de las pruebas (no subir)
+tests/edge/.tmp/
+node_modules/
+.DS_Store
+# Nunca subas claves ni copias de datos personales
+.env
+*.local.json
+brujula-respaldo-*.json
+brujula-copia-*.json
