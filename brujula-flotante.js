@@ -89,7 +89,7 @@ async function propose(){
    mode:"schedule_proposal",consent:true,shareSchedule:true,
    message:input.value.trim().slice(0,1800),
    courses:state.courses.map(c=>c.name),
-   schedule:state.blocks.slice(0,90).map(b=>({
+   schedule:state.blocks.slice(0,40).map(b=>({
     id:b.id,course:course(b.courseId).name,date:b.date,start:b.start,end:b.end,
     title:b.title,kind:b.kind,status:b.status,priority:b.priority,difficulty:b.difficulty
    })),preferences:state.preferences||{}
