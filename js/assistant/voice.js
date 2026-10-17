@@ -41,23 +41,25 @@ export function listen(kind = 'dictation') {
   const rec = new Recognition();
   st.rec = rec;
   rec.lang = 'es-PE'; rec.continuous = false; rec.interimResults = true; rec.maxAlternatives = 1;
-  let finalText = '', failed = false;
+  let finalText = '', lastTranscript = '', failed = false;
   rec.onresult = (e) => {
     if (mark !== st.epoch) return;
     let fin = '', interim = '';
     for (let i = 0; i < e.results.length; i++) { const t = e.results[i]?.[0]?.transcript || ''; if (e.results[i].isFinal) fin += t + ' '; else interim += t + ' '; }
-    hooks.onText((fin || interim).trim().slice(0, 1800));
+    lastTranscript=(fin || interim).trim().slice(0,1800);
+    hooks.onText(lastTranscript);
     if (fin.trim()) finalText = fin.trim().slice(0, 1800);
   };
   rec.onerror = (e) => { if (mark !== st.epoch) return; failed = true; stopVoice(ERRORS[e.error] || 'No se pudo reconocer tu voz.'); };
   rec.onend = () => {
     if (mark !== st.epoch || failed) return;
     st.rec = null;
-    if (kind === 'dictation') { setPhase('idle', finalText ? 'Dictado listo. Revisa y envía.' : 'No capté ninguna frase.'); return; }
+    if (kind === 'dictation') { setPhase('idle', (finalText||lastTranscript) ? 'Dictado listo. Revisa y envía.' : 'No capté ninguna frase.'); return; }
     if (!st.conversation) { setPhase('idle'); return; }
-    if (!finalText) { stopVoice('No escuché una pregunta; pausé la conversación para proteger tu privacidad.'); return; }
+    const spoken = finalText || lastTranscript;
+    if (!spoken) { stopVoice('No escuché una pregunta; pausé la conversación para proteger tu privacidad.'); return; }
     setPhase('thinking', 'Pensando…');
-    hooks.onFinal(finalText);
+    hooks.onFinal(spoken);
   };
   try {
     rec.start();
@@ -84,3 +86,14 @@ export function speakAndContinue(text) {
 
 document.addEventListener('visibilitychange', () => { if (document.hidden && (st.conversation || st.rec)) stopVoice('El micrófono se detuvo al salir de Brújula.'); });
 window.addEventListener('pagehide', () => stopVoice());
+
+
+/** Prueba permisos sin guardar ni enviar grabaciones. Solo responde si el navegador puede captar audio. */
+export async function testMicrophone(){
+  if(!navigator.mediaDevices?.getUserMedia)return 'Este navegador no permite probar el micrófono por WebRTC. Usa Chrome actualizado con HTTPS.';
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    stream.getTracks().forEach(t=>t.stop());
+    return Recognition?'El micrófono tiene permiso y el reconocimiento está disponible.':'Micrófono permitido, pero tu navegador no ofrece reconocimiento de voz. Prueba Chrome.';
+  }catch(e){return e.name==='NotAllowedError'?'Micrófono bloqueado: abre permisos del sitio y actívalo.':e.name==='NotFoundError'?'No encontré micrófono. Revisa la entrada de audio de tu dispositivo.':'Error de micrófono: '+e.name;}
+}
