@@ -46,7 +46,7 @@ function coursesTab(s, now) {
     </a>`;
   }).join('');
   return `<div class="stack">
-    <div class="hstack between"><p class="muted small">Dificultad e importancia de cada curso ordenan tus prioridades.</p><button type="button" class="btn btn-sm" data-act="new-course">${icon('plus', 'sm')}Curso</button></div>
+    <div class="hstack between"><p class="muted small">1. Crea tu curso. 2. Entra al curso y añade temas. 3. Pulsa «Programar sesión» para llevar un tema al horario. 4. Registra exámenes para que Brújula priorice repasos.</p><button type="button" class="btn btn-sm" data-act="new-course">${icon('plus', 'sm')}Curso</button></div>
     ${stats.length ? `<div class="cards two three">${cards}</div>` : emptyState({ title: 'Agrega tus cursos', text: 'Nombre, color, dificultad y créditos. Luego sus temas y exámenes.', action: 'new-course', actionLabel: 'Nuevo curso' })}
     ${archived.length ? `<details><summary class="label">${plural(archived.length, 'curso archivado', 'cursos archivados')}</summary><div class="hstack" style="margin-top:8px">${archived.map((c) => `<a class="chip" href="#/curso/${encodeURIComponent(c.id)}">${esc(c.name)}</a>`).join('')}</div></details>` : ''}
   </div>`;
@@ -152,6 +152,14 @@ function topicDetail(c, id) {
       ${diffs.length ? `<div class="panel"><ul class="list">${diffs.map((d) => `<li class="topic-row"><div><b style="font-weight:600;${d.resolved ? 'text-decoration:line-through;color:var(--ink-3)' : ''}">${esc(d.text || DIFFICULTY_KINDS[d.kind] || 'Dificultad')}</b><div class="sub"><span class="chip">${esc(DIFFICULTY_KINDS[d.kind] || 'Otro')}</span><span>${esc(fmtRelDay(d.at.slice(0, 10), today))}</span></div></div><button type="button" class="btn btn-sm btn-quiet" data-act="diff-resolve" data-id="${esc(d.id)}" data-v="${d.resolved ? '0' : '1'}">${icon(d.resolved ? 'rotate-ccw' : 'check', 'sm')}${d.resolved ? 'Reabrir' : 'Resuelta'}</button></li>`).join('')}</ul></div>` : '<p class="small muted">Anota qué te cuesta (concepto, fórmula, álgebra, unidades o tiempo). Sube la prioridad del tema y te ayuda a ver patrones.</p>'}
     </section>
     <section class="section">${sectionHead('Sesiones')}${sessions.length ? `<div class="agenda">${sessions.slice(0, 10).map((b) => blockRow(b, { showDate: true })).join('')}</div>` : '<p class="small muted">Todavía no hay sesiones de este tema.</p>'}</section>
+    <section class="section">
+      ${sectionHead('Materiales PDF')}
+      <div class="panel stack">
+        <p class="small muted">Guarda archivos privados para este tema. El texto extraído de PDFs digitales puede prepararse para ChatGPT; los escaneos necesitan OCR.</p>
+        <div class="hstack"><button type="button" class="btn btn-sm" data-act="pdf-upload" data-id="${esc(t.id)}">${icon('upload', 'sm')}Subir PDF</button></div>
+        ${(t.materials||[]).length ? `<div class="stack">${t.materials.map((m)=>`<div class="hstack between" style="gap:8px;flex-wrap:wrap"><span class="small" style="min-width:0;overflow-wrap:anywhere">${icon('file-text', 'sm')}${esc(m.name)}</span><div class="hstack"><button type="button" class="btn btn-sm" data-act="pdf-open" data-id="${esc(t.id)}" data-pdf="${esc(m.id)}">Abrir</button><button type="button" class="btn btn-sm" data-act="pdf-analyze" data-id="${esc(t.id)}" data-pdf="${esc(m.id)}">ChatGPT</button><button type="button" class="icon-btn" data-act="pdf-delete" data-id="${esc(t.id)}" data-pdf="${esc(m.id)}" aria-label="Quitar PDF">${icon('trash-2', 'sm')}</button></div></div>`).join('')}</div>` : '<p class="small muted">Aún no hay materiales adjuntos.</p>'}
+      </div>
+    </section>
     ${t.notes ? `<section class="section">${sectionHead('Notas')}<p class="lesson">${esc(t.notes)}</p></section>` : ''}
   </div>`;
 }
@@ -175,3 +183,13 @@ action('diff-resolve', (el) => resolveDifficulty(el.dataset.id, el.dataset.v ===
 action('grade', (el) => reviewTopic(el.dataset.id, el.dataset.g));
 action('topic-filter', (el) => { topicFilter = el.dataset.id; import('../core/store.js').then((m) => m.notify('ui')); });
 action('plan-exam', (el) => planExam(el.dataset.id));
+
+
+action('pdf-upload', (el) => import('../features/materials.js').then(m=>m.pickPDF(el.dataset.id)));
+action('pdf-open', (el) => import('../features/materials.js').then(m=>m.openPDF(el.dataset.id,el.dataset.pdf)).catch(e=>import('../ui/feedback.js').then(x=>x.toast(e.message,{tone:'warn'}))));
+action('pdf-analyze', (el) => import('../features/materials.js').then(m=>m.analyzePDF(el.dataset.id,el.dataset.pdf)).catch(e=>import('../ui/feedback.js').then(x=>x.toast(e.message,{tone:'warn'}))));
+action('pdf-delete', async (el) => {
+  const {confirmSheet,toast}=await import('../ui/feedback.js');
+  if(!(await confirmSheet({title:'Quitar material PDF',text:'Se borrará el archivo privado del tema.',confirm:'Quitar',danger:true})))return;
+  try{const m=await import('../features/materials.js');await m.removePDF(el.dataset.id,el.dataset.pdf);toast('PDF quitado.');}catch(e){toast(e.message,{tone:'warn'});}
+});
