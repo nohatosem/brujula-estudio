@@ -135,4 +135,5 @@ document.addEventListener("click",e=>{
  if(button.dataset.replan==="select")changeMode(button.dataset.mode);
  if(button.dataset.replan==="undo")undo();
 });
+render();
 })();
