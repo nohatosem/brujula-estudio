@@ -16,22 +16,65 @@ const TABLE='brujula_assistant_requests';
 export async function createChatGPTRequest(instruction='',extras={}){
   if(!cloud.user)throw Error('Primero inicia sesión en Brújula.');
   const s=store.state,client=await getClient();
-  const min=addDays(todayISO(),-1),max=addDays(todayISO(),125);
+  // CHECK brujula_request_limited limita la representación JSON a 100 000 caracteres.
+  // Escogemos actividades cercanas y una muestra reducida de la rutina futura, sin perder
+  // clases, exámenes o trabajo aún pendiente; nunca mostramos datos de otra cuenta.
+  const today=todayISO(),near=addDays(today,28),future=addDays(today,125);
+  const compact=(b)=>({id:b.id,courseId:b.courseId,date:b.date,
+    start:b.start,end:b.end,title:String(b.title||'').slice(0,100),
+    kind:b.kind,status:b.status,priority:b.priority,
+    ...(b.semesterFixed?{fixed:true}:{}),...(b.seriesId?{seriesId:b.seriesId}: {})});
+  const all=s.blocks.filter(b=>b.date>=addDays(today,-1)&&b.date<=future)
+    .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  const nearBlocks=all.filter(b=>b.date<=near);
+  const later=all.filter(b=>b.date>near);
+  // Para los meses lejanos enviamos muestras por rutina, no cientos de copias iguales.
+  const sampled=[],seriesSeen=new Set();
+  for(const b of later){
+    if(!b.seriesId && !b.routineKey && (b.kind==='exam'||b.kind==='class')){sampled.push(b);continue;}
+    const key=b.seriesId||b.routineKey||b.title+'|'+b.start;
+    if(seriesSeen.has(key))continue;
+    seriesSeen.add(key);sampled.push(b);
+  }
   const context={
     version:1,createdAt:new Date().toISOString(),
-    ...(extras.material ? {material:extras.material} : {}),
+    ...(extras.material?{material:extras.material}:{}),
     request:String(instruction||'Propón un horario de estudio equilibrado con mis prioridades.').slice(0,700),
-    courses:s.courses.map(c=>({id:c.id,name:c.name,importance:c.importance,difficulty:c.difficulty})),
-    blocks:s.blocks.filter(b=>b.date>=min&&b.date<=max).slice(0,600).map(b=>({
-      id:b.id,course:courseOf(s,b.courseId).name,date:b.date,start:b.start,end:b.end,
-      title:b.title,kind:b.kind,status:b.status,priority:b.priority,
-      fixed:!!b.semesterFixed})),
-    preferences:{wake:prefs(s).wake,sleep:prefs(s).sleep,lunchStart:prefs(s).lunchStart,
-      lunchEnd:prefs(s).lunchEnd,breakMins:prefs(s).breakMins,maxStudyMin:prefs(s).maxStudyMin}
+    courses:s.courses.map(c=>({id:c.id,name:String(c.name||'').slice(0,90),
+      importance:c.importance,difficulty:c.difficulty})),
+    blocks:[],
+    coverage:{from:today,to:future,nearThrough:near,
+      originalCount:all.length,representativeBeyondNear:true},
+    preferences:{wake:prefs(s).wake,sleep:prefs(s).sleep,
+      lunchStart:prefs(s).lunchStart,lunchEnd:prefs(s).lunchEnd,
+      breakMins:prefs(s).breakMins,maxStudyMin:prefs(s).maxStudyMin}
   };
+  const IMPORTANT=(b)=>b.kind==='class'||b.kind==='exam'||b.status==='missed';
+  const ordered=[...nearBlocks.filter(IMPORTANT),...nearBlocks.filter(b=>!IMPORTANT(b)),
+    ...sampled];
+  // Límite preventivo inferior al CHECK de la tabla; UTF-8 multibyte no lo afecta
+  // porque la restricción de Postgres cuenta caracteres, no bytes.
+  const MAX_TEXT=80000;
+  for(const b of ordered){
+    const row=compact(b);
+    context.blocks.push(row);
+    if(JSON.stringify(context).length>MAX_TEXT){context.blocks.pop();break;}
+  }
+  if(JSON.stringify(context).length>95000)
+    throw Error('La solicitud es demasiado grande. Acorta el material PDF o el texto de la consulta.');
+  if(context.blocks.length<all.length){
+    context.coverage.omittedCount=all.length-context.blocks.length;
+    context.coverage.note='La muestra no representa todas las repeticiones. Verificar disponibilidad real antes de aplicar cambios.';
+  }
+  if(JSON.stringify(context).length>98000)
+    throw Error('La solicitud excede el límite de seguridad.');
   const {data,error}=await client.from(TABLE).insert({user_id:cloud.user.id,schedule_snapshot:context})
     .select('id,expires_at').single();
-  if(error)throw Error('No se pudo enviar la solicitud: '+error.message);
+  if(error){
+    if(/brujula_request_limited|check constraint/i.test(error.message||''))
+      throw Error('Tu calendario es demasiado extenso para esta solicitud. Prueba solicitando únicamente la semana próxima o un PDF más pequeño.');
+    throw Error('No se pudo enviar la solicitud: '+error.message);
+  }
   return data;
 }
 export function openChatGPTGuide(request){
