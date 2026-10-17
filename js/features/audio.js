@@ -54,14 +54,19 @@ export const isSpeaking = () => canSpeak() && speechSynthesis.speaking;
 const ambient = { ctx: null, nodes: [], kind: null };
 export const ambientOn = () => !!ambient.ctx;
 export const ambientKind = () => ambient.kind;
-export function startAmbient(kind = 'rain') {
+export async function startAmbient(kind = 'rain') {
   stopAmbient();
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return false;
-  const ctx = new AC();
+  let ctx;
+  try { ctx = new AC(); } catch (_) { return false; }
   ambient.ctx = ctx; ambient.kind = kind;
+  // En teléfonos, AudioContext suele iniciar 'suspended'; reanudar desde el clic.
+  try { if(ctx.state !== 'running') await ctx.resume(); }
+  catch (_) { stopAmbient();return false; }
+  if(ctx.state !== 'running'){stopAmbient();return false;}
   const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
-  master.gain.linearRampToValueAtTime(kind === 'rain' ? 0.32 : 0.9, ctx.currentTime + 1.5);
+  master.gain.linearRampToValueAtTime(kind === 'rain' ? 0.32 : 0.42, ctx.currentTime + 0.35);
   ambient.nodes.push(master);
   if (kind === 'rain') {
     // Ruido marrón filtrado: suena como lluvia suave lejana.
@@ -76,10 +81,11 @@ export function startAmbient(kind = 'rain') {
     src.connect(hp); hp.connect(lp); lp.connect(master); src.start();
     ambient.nodes.push(src, lp, hp);
   } else {
-    // Acorde suave (el de Brújula 3.x).
-    [164.81, 196, 246.94].forEach((f, i) => {
+    // Acorde suave y audible también en altavoces de teléfonos.
+    [261.63, 329.63, 392, 523.25].forEach((f, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine'; o.frequency.value = f; g.gain.value = i === 0 ? 0.014 : 0.009;
+      o.type = i===0 ? 'triangle' : 'sine'; o.frequency.value = f;
+      g.gain.value = i===0 ? 0.075 : i===3 ? 0.025 : 0.05;
       o.connect(g); g.connect(master); o.start();
       ambient.nodes.push(o, g);
     });
@@ -89,7 +95,7 @@ export function startAmbient(kind = 'rain') {
 export function stopAmbient() {
   for (const n of ambient.nodes) { try { n.stop?.(); } catch (_) { /* nada */ } try { n.disconnect?.(); } catch (_) { /* nada */ } }
   ambient.nodes = [];
-  if (ambient.ctx) { ambient.ctx.close().catch(() => {}); ambient.ctx = null; }
+  if (ambient.ctx) { try{Promise.resolve(ambient.ctx.close()).catch(()=>{});}catch(_){} ambient.ctx = null; }
   ambient.kind = null;
 }
 
