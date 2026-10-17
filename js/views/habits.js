@@ -35,7 +35,7 @@ export function render(c) {
         const streak = habitStreak(s, h.id, today);
         return `<li class="habit-line"><button type="button" class="ico" aria-pressed="${on}" data-act="habit" data-habit="${esc(h.id)}" data-date="${esc(today)}" aria-label="${on ? 'Desmarcar' : 'Marcar'} ${esc(h.name)}">${icon(on ? 'check' : h.icon || 'circle')}</button>
           <div><b>${esc(h.name)}</b><div class="week-dots" aria-label="Últimos 7 días">${days.map((d) => `<i class="${s.habits[d]?.[h.id] ? 'on' : ''} ${d === today ? 'today' : ''}" title="${esc(fmtRelDay(d, today))}"></i>`).join('')}</div></div>
-          <span class="small ${streak > 1 ? '' : 'faint'}" style="display:inline-flex;align-items:center;gap:4px;color:${streak > 1 ? 'var(--contour)' : ''}">${streak > 1 ? icon('flame', 'sm') + streak : ''}</span></li>`;
+          <span class="small ${streak > 1 ? '' : 'faint'}" style="display:inline-flex;align-items:center;gap:4px;color:${streak > 1 ? 'var(--contour)' : ''}">${streak > 1 ? icon('flame', 'sm') + streak : ''}</span><button type="button" class="btn btn-sm btn-soft" data-act="habit-plan" data-habit="${esc(h.id)}">${icon('calendar-plus','sm')}Horario</button></li>`;
       }).join('')}</ul></div>
     </section>
     <section class="section">${sectionHead('Diario de 3 minutos')}
@@ -100,4 +100,12 @@ action('habit-manage', () => {
       });
     },
   });
+});
+
+
+action('habit-plan', async (el) => {
+  const h=store.state.habitDefs.find(x=>x.id===el.dataset.habit);
+  if(!h)return;
+  const {openAssistant}=await import('../assistant/panel.js');
+  openAssistant({prefill:'Todos los días '+h.name+' de 18:00 a 18:30. Ajusta los horarios según lo que te diga.'});
 });
