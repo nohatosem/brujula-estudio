@@ -1,4 +1,4 @@
-/* Brújula 3.6 — chat pastel accesible */
+/* Brújula 3.7 — chat y voz pastel accesible */
 .brujula-ai-card{background:linear-gradient(135deg,#fbf8ff,#f6fbf8);border:1px solid #dfd5ee;border-radius:20px;padding:20px;box-shadow:0 7px 24px #77649b11}
 .brujula-ai-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .brujula-ai-head h2{margin:0;font-size:20px}
@@ -18,3 +18,12 @@
 #brujulaAiStatus{font-size:12px;color:#665586;min-height:1.4em;margin:7px 0}
 #brujulaAiStatus[data-type="error"]{color:#a14864}
 @media(max-width:640px){.brujula-ai-card{padding:14px}.brujula-ai-feed{height:290px}.brujula-ai-actions .btn{flex:1}}
+/* Brújula 3.7 · Modo de conversación por voz */
+.brujula-voice-panel{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:13px;background:#f3f0fc;border:1px solid #e4dbf5;padding:12px;border-radius:14px}
+.brujula-voice-panel .btn{font-size:13px}
+.brujula-voice-panel .btn[aria-pressed="true"]{background:#a24f6e;border-color:#a24f6e;color:#fff;box-shadow:0 4px 12px #a24f6e29}
+.brujula-voice-panel .btn:disabled{opacity:.5}
+.brujula-voice-status{width:100%;font-size:12px;color:#60547d;line-height:1.5;min-height:19px}
+.brujula-voice-status[data-type="error"]{color:#a54560}
+.brujula-voice-footnote{font-size:11px;color:#736786;line-height:1.5;margin:7px 0 2px}
+@media(max-width:640px){.brujula-voice-panel{display:grid;grid-template-columns:1fr 1fr}.brujula-voice-panel .btn{font-size:12px;padding:9px 5px}.brujula-voice-status{grid-column:1/-1}}
