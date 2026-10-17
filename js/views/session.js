@@ -193,7 +193,17 @@ action('timer-toggle', () => {
 action('timer-reset', () => { const { t, total } = timerState(); t.running = false; t.remaining = total; commit(); });
 action('timer-mode', () => { const p = prefs(store.state); const { t } = timerState(); t.running = false; t.mode = t.mode === 'focus' ? 'break' : 'focus'; t.remaining = (t.mode === 'break' ? p.breakMin : p.focusMin) * 60; commit(); });
 action('ambient', (el) => { if (el.dataset.kind === 'off') audio.stopAmbient(); else if (!audio.startAmbient(el.dataset.kind)) toast('Este navegador no permite sonido ambiental.', { tone: 'warn' }); import('../core/store.js').then((m) => m.notify('ui')); });
-action('read-lesson', () => { const b = current(); if (!b) return; const L = lessonFor(b, b.topicId ? findTopic(b.topicId) : null); if (!audio.speak(L.intro || b.goal || b.title)) toast('Tu navegador no puede leer en voz alta.', { tone: 'warn' }); });
+action('read-lesson', async () => {
+  const b=current(); if(!b)return;
+  const L=lessonFor(b,b.topicId?findTopic(b.topicId):null);
+  const spanish=await audio.waitForSpanishVoice();
+  if(!spanish){
+    toast('No se encontró una voz en español. Instala o activa una voz española en el idioma de tu dispositivo y vuelve a probar.',{tone:'warn',duration:8500});
+    return;
+  }
+  if(!audio.speak(L.intro||b.goal||b.title))
+    toast('No se pudo iniciar la explicación en español.',{tone:'warn'});
+});
 action('stop-audio', () => { audio.stopSpeaking(); audio.stopPlayback(); });
 action('rec-toggle', async (el) => {
   const b = current(); if (!b) return;
