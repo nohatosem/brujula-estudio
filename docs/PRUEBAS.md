@@ -1,6 +1,17 @@
-# Pruebas de Brújula 4.0
+# Pruebas de Brújula
 
-Resultado de la última ejecución (17 de octubre de 2026): **98 de 98 pruebas correctas** en cinco grupos. Abajo se detalla qué cubre cada grupo, qué fue simulado y qué **no** se ha podido probar en real.
+## Actualización 4.2.4 · 17 de octubre de 2026
+
+- **29 pruebas unitarias correctas**, incluidas la selección de los siete días exportados y la conservación de comillas, notas y texto que podría interpretarse como fórmula en un CSV.
+- **9 comprobaciones en Chromium correctas**, con la aplicación y supabase-js reales y cuentas/servidor simulados: distribución de Hoy, anchuras de 320/390/768 px, check y Deshacer con hábitos, notas guardadas tras recargar, acceso a edición, descarga CSV, etiquetas de botones, conservación de cursos/horarios/sueño y apertura sin conexión.
+- Revisión visual de las capturas de escritorio y móvil. Los 62 recursos del precaché existen; la versión y la URL del CSS coinciden.
+- Las pruebas no escriben en Supabase de producción. La voz física del dispositivo no forma parte de esta actualización.
+
+Ejecutar `npm test` y `npm run test:today`. El navegador puede indicarse con `BRUJULA_CHROMIUM_EXECUTABLE` y una copia local de supabase-js con `SUPABASE_JS_BUNDLE`, como permite el banco de pruebas.
+
+## Validación original de 4.0
+
+Resultado de la validación original (17 de octubre de 2026): **98 de 98 pruebas correctas** en cinco grupos. Estos cinco grupos completos no se volvieron a ejecutar para 4.2.4; arriba se detalla la validación de esta actualización. Abajo se detalla qué cubre cada grupo, qué fue simulado y qué **no** se ha podido probar en real.
 
 | Grupo | Pruebas | Herramienta | Qué es real y qué es simulado |
 | --- | --- | --- | --- |

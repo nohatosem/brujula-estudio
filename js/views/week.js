@@ -7,7 +7,8 @@ import { weekDays, addDays, todayISO, fmtLong, fmtShort, WEEKDAYS_SHORT, MONTHS,
 import { conflicts, dayBlocks, freeWindows, violations, VIOLATION_TEXT, isFlexible, isFixedKind, studyMinutesOn } from '../engine/scheduler.js';
 import { rulesFrom } from '../engine/rules.js';
 import { icon } from '../ui/icons.js';
-import { action } from '../ui/dom.js';
+import { action, download } from '../ui/dom.js';
+import { weekCSV } from '../features/week-export.js';
 import { go } from '../ui/router.js';
 import { toast } from '../ui/feedback.js';
 import { blockRow, emptyState } from './common.js';
@@ -151,8 +152,9 @@ export function render(c) {
       <span class="grow"></span>
       ${cl.length ? `<span class="chip urgent">${icon('triangle-alert', 'sm')}${plural(cl.length, 'cruce', 'cruces')}</span>` : ''}
       <button type="button" class="btn btn-sm" data-act="daily-routine">${icon('sunrise', 'sm')}Rutina diaria</button>
-      <button type="button" class="btn btn-sm" data-act="plan-week">${icon('wand-sparkles', 'sm')}Planificar semana</button>
-      <button type="button" class="btn btn-sm btn-primary" data-act="quick-add" data-date="${esc(sel)}">${icon('plus', 'sm')}Añadir</button>
+      <button type="button" class="btn btn-sm" data-act="plan-week" title="Organizar varias sesiones de estudio en los huecos libres">${icon('wand-sparkles', 'sm')}Planificar semana</button>
+      <button type="button" class="icon-btn" data-act="download-week" data-date="${esc(days[0])}" aria-label="Descargar semana como CSV editable" title="Descargar semana · CSV editable">${icon('download', 'sm')}</button>
+      <button type="button" class="btn btn-sm btn-primary" data-act="quick-add" data-date="${esc(sel)}">${icon('plus', 'sm')}Añadir actividad</button>
     </div>
     ${modeCard(s)}
     ${dayStrip(days, sel, c.today, s)}
@@ -238,4 +240,9 @@ action('pick-day-agenda', (el) => { selected = el.dataset.date; go('semana/' + e
 action('daily-routine', () => import('../ui/daily-routine.js').then(m=>m.openDailyRoutineSheet()).catch(e=>toast(e.message,{tone:'warn'})));
 action('mode', (el) => changeMode(el.dataset.mode));
 action('plan-week', () => planWeekFlow());
+action('download-week', el => {
+  const from = isValidDate(el.dataset.date) ? el.dataset.date : todayISO();
+  download('brujula-semana-' + from + '.csv', weekCSV(store.state, from), 'text/csv;charset=utf-8');
+  toast('Semana descargada. Puedes editar el CSV en Excel o Google Sheets.');
+});
 action('undo-last', () => { const r = undo(); toast(r.ok ? `Deshecho: ${r.entry.label}` : r.reason, { tone: r.ok ? 'ok' : 'warn' }); });
