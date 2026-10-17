@@ -235,7 +235,7 @@ export async function changeMode(next) {
       details: `<div class="stack"><p>${esc(MODE_DETAIL[next].text)}</p>
         <div class="notice">${icon('shield-check')}<div><b>Siempre protegido:</b> clases, exámenes, temas dominados, tu sueño, tu almuerzo y los descansos entre actividades. Si no hay hueco, no muevo nada.</div></div>
         <div class="notice">${icon('undo-2')}<div>Cada cambio automático se puede <b>deshacer</b> y queda en tu historial. Solo actúa cuando tú marcas «No lo hice» o «Repasar»; nunca por la hora.</div></div>
-        <p class="hint">Las propuestas de Gemini siempre requieren tu aprobación, en cualquier modo.</p></div>`,
+        <p class="hint">Gemini solo aplica cambios directamente si activaste «Asistente directo» en Ajustes; las reglas de protección siguen vigentes.</p></div>`,
     });
     if (!ok) return;
   }
@@ -398,6 +398,12 @@ export function planWeekFlow() {
   const ranked = rankPriorities(S(), new Date());
   const plan = planWeek(S(), ranked, { rules: rulesFrom(S().preferences), now: new Date() });
   if (!plan.blocks.length) { toast(ranked.some((p) => p.type === 'topic') ? 'Tus temas prioritarios ya tienen sesiones esta semana.' : 'Agrega temas a tus cursos para que pueda planificar tu semana.', { tone: 'ok' }); return; }
+  if (prefs(S()).aiDirect && !plan.skipped.length) {
+    const entry = createBlocks(plan.blocks, {label:'Plan semanal directo',
+      reason:'Distribución solicitada según prioridades y descanso',type:'week-plan'});
+    undoToast('Semana organizada · Deshacer',entry);
+    return;
+  }
   const ops = plan.blocks.map((b) => { const why = b.why; delete b.why; return { action: 'add', id: b.id, before: null, after: b, why }; });
   openProposal({
     title: 'Plan para tu semana', ops, source: 'plan',
