@@ -63,9 +63,6 @@ const SHELL = [
   './js/features/reminders.js',
   './js/features/undo-toast.js',
   './icons/apple-touch-icon.png',
-  './assets/fonts/bricolage-grotesque-latin.woff2',
-  './assets/fonts/atkinson-hyperlegible-next-latin.woff2',
-  './assets/fonts/atkinson-hyperlegible-next-italic-latin.woff2',
 ];
 // PRECACHE:END
 
