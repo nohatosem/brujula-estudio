@@ -192,7 +192,16 @@ action('timer-toggle', () => {
 });
 action('timer-reset', () => { const { t, total } = timerState(); t.running = false; t.remaining = total; commit(); });
 action('timer-mode', () => { const p = prefs(store.state); const { t } = timerState(); t.running = false; t.mode = t.mode === 'focus' ? 'break' : 'focus'; t.remaining = (t.mode === 'break' ? p.breakMin : p.focusMin) * 60; commit(); });
-action('ambient', (el) => { if (el.dataset.kind === 'off') audio.stopAmbient(); else if (!audio.startAmbient(el.dataset.kind)) toast('Este navegador no permite sonido ambiental.', { tone: 'warn' }); import('../core/store.js').then((m) => m.notify('ui')); });
+action('ambient', async (el) => {
+  if(el.dataset.kind==='off'){audio.stopAmbient();toast('Sonido ambiental detenido.');}
+  else {
+    const ok=await audio.startAmbient(el.dataset.kind);
+    toast(ok?(el.dataset.kind==='rain'?'Lluvia activada.':'Acorde activado. Revisa el volumen multimedia.') :
+      'El navegador bloqueó el audio. Toca el botón otra vez y revisa el volumen multimedia.',
+      {tone:ok?'ok':'warn',duration:5300});
+  }
+  import('../core/store.js').then(m=>m.notify('ui'));
+});
 action('read-lesson', async () => {
   const b=current(); if(!b)return;
   const L=lessonFor(b,b.topicId?findTopic(b.topicId):null);
