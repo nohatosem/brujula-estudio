@@ -8,16 +8,41 @@ export const canSpeak = () => 'speechSynthesis' in window && typeof window.Speec
 export function pickVoice() {
   if (!canSpeak()) return null;
   const voices = speechSynthesis.getVoices();
-  return voices.find((v) => v.lang?.toLowerCase() === 'es-pe') || voices.find((v) => v.lang?.toLowerCase().startsWith('es-419')) || voices.find((v) => v.lang?.toLowerCase().startsWith('es')) || null;
+  const spanish = voices.filter(v => /^es([-_]|$)/i.test(v.lang || ''));
+  return spanish.find(v=>/^es[-_]pe$/i.test(v.lang)) ||
+    spanish.find(v=>/^es[-_]419$/i.test(v.lang)) ||
+    spanish.find(v=>/^es[-_](mx|co|ar|cl|es)$/i.test(v.lang)) ||
+    spanish[0] || null;
+}
+/** Chrome a veces entrega sus voces después de cargar la página. Esperamos brevemente. */
+export async function waitForSpanishVoice(timeout=3000) {
+  if (!canSpeak()) return false;
+  if (pickVoice()) return true;
+  return await new Promise(resolve=>{
+    let finished=false;
+    let timer=null;
+    function finish(){
+      if(finished)return;
+      finished=true;
+      if(timer!=null)clearTimeout(timer);
+      speechSynthesis.removeEventListener?.('voiceschanged',onVoices);
+      resolve(!!pickVoice());
+    }
+    function onVoices(){if(pickVoice())finish();}
+    speechSynthesis.addEventListener?.('voiceschanged',onVoices);
+    timer=setTimeout(finish,timeout);
+    speechSynthesis.getVoices();
+  });
 }
 export function speak(text, { rate = 0.92, onend = null } = {}) {
   if (!canSpeak()) return false;
   stopSpeaking();
   const clean = String(text || '').replace(/https?:\/\/\S+/g, 'enlace').replace(/[*_#`>]/g, '').slice(0, 3500).trim();
   if (!clean) return false;
+  const v = pickVoice();
+  if (!v) return false; // No usar nunca la voz predeterminada inglesa.
   const u = new SpeechSynthesisUtterance(clean);
-  u.lang = 'es-PE'; u.rate = rate; u.pitch = 1;
-  const v = pickVoice(); if (v) u.voice = v;
+  u.voice = v; u.lang = v.lang || 'es-ES'; u.rate = rate; u.pitch = 1;
   if (onend) { u.onend = onend; u.onerror = onend; }
   speechSynthesis.speak(u);
   return true;
