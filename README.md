@@ -1,4 +1,4 @@
-# Brújula 3.7 — horario y tutor por voz
+# Brújula 3.8 — Calendario y asistente flotante
 
 Una aplicación web gratuita para cursos, horarios, sesiones guiadas y progreso.
 
@@ -83,6 +83,18 @@ Actualizar código desde el plugin GitHub es distinto de modificar información 
 - Notificaciones push mientras el navegador está cerrado.
 - Aprendizaje automático con seguimiento autónomo de la persona, procesamiento de PDF y tarjetas inteligentes a partir de documentos.
 
+
+## Versión 3.8 · Globo de Gemini en el horario
+- Después de entrar a tu cuenta, pulsa **✦ Mi asistente** abajo a la derecha. Se abre una ventana pequeña sobre el horario (en móvil, panel adaptado).
+- El chat Gemini se mantiene dentro de ese globo; **Mi asistente** ofrece la guía por reglas y acceso al globo.
+- Para consejos académicos, escribe la pregunta, acepta el envío a Gemini y pulsa **Enviar pregunta**. Tu horario no se comparte salvo que marques la opción.
+- Para reorganizar actividades, escribe por ejemplo *No pude estudiar Física; busca un nuevo espacio mañana por la tarde*. Marca las autorizaciones necesarias y pulsa **📅 Proponer cambio**.
+- Gemini devuelve únicamente una propuesta. Brújula valida el ID de las actividades, prohíbe borrados, protege clases/exámenes y actividades dominadas, busca choques, y comprueba sueño, almuerzo y el descanso entre actividades. Si falla una comprobación, no se permite aplicar.
+- Revisa la lista y pulsa **✓ Revisar y aplicar**. A continuación aparece la confirmación explícita del navegador; solo después se modifica tu horario y se sincroniza a tu cuenta.
+- El modo de propuesta permite **hasta tres** cambios por petición. No es reprogramación silenciosa ni instantánea. Usa la misma cuota gratuita de Gemini que el chat.
+- Si Gemini necesita detalles, puede pedir una aclaración sin generar cambios.
+- Las propuestas aún deben probarse con sesiones reales y con un cambio pequeño. No compartas credenciales ni información de otros usuarios.
+- El globo se oculta si cierras sesión y no mantiene propuestas de una cuenta al cambiar de usuario.
 
 ## Brújula 3.7: hablar con el tutor
 
