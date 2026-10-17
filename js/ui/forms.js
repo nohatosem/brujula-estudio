@@ -41,6 +41,7 @@ export function openQuickAdd({ date = null, start = null } = {}) {
     body: `<label class="field"><span class="sr-only">¿Qué quieres planificar?</span>
         <input class="input" id="qaText" autocomplete="off" autofocus placeholder="Ej.: ${esc(examples[Math.floor(Math.random() * examples.length)])}" maxlength="160" enterkeyhint="done"></label>
       <div id="qaPreview" class="stack" aria-live="polite"></div>
+      <div class="hstack qa-ai-actions"><button type="button" class="btn btn-soft" data-ai-plan>✨ Planificar con IA</button><button type="button" class="btn btn-soft" data-chatgpt-plan>ChatGPT (beta)</button></div><p class="hint">ChatGPT prepara una solicitud privada sin copiar tu horario; para obtener respuesta debes abrir ChatGPT con Supabase conectado.</p>
       <div class="hstack" id="qaKinds">${Object.entries(KIND_LABEL).map(([k, v]) => `<button type="button" class="btn btn-sm btn-soft" data-kind="${k}">${icon(KIND_ICON[k], 'sm')}${v}</button>`).join('')}</div>`,
     foot: `<button type="button" class="btn shrink" data-more>${icon('sliders-horizontal')}Detalles</button><button type="button" class="btn btn-primary" data-save disabled>${icon('check')}Guardar</button>`,
     onMount(card) {
@@ -93,6 +94,21 @@ export function openQuickAdd({ date = null, start = null } = {}) {
         card.querySelectorAll('[data-kind]').forEach((x) => x.classList.toggle('btn-soft', x.dataset.kind !== forcedKind));
         if (!input.value.trim()) input.value = KIND_LABEL[forcedKind || 'study'] + ' ';
         input.focus(); paint();
+      });
+      card.querySelector('[data-ai-plan]').addEventListener('click', async () => {
+        const message = input.value.trim() || 'Organiza mi semana respetando mis clases, sueño y descansos.';
+        sheet.close();
+        const m = await import('../assistant/panel.js');
+        m.openAssistant({prefill:message});
+      });
+      card.querySelector('[data-chatgpt-plan]').addEventListener('click', async () => {
+        const btn = card.querySelector('[data-chatgpt-plan]'); btn.disabled = true;
+        try {
+          const m = await import('../features/chatgpt-bridge.js');
+          const message = input.value.trim() || 'Organiza mi semana priorizando temas difíciles, clases, descansos y hábitos.';
+          sheet.close(); await m.requestChatGPT(message);
+        } catch(e) { toast(e.message || 'No se pudo preparar la solicitud.', {tone:'warn'}); }
+        finally { btn.disabled = false; }
       });
       card.querySelector('[data-more]').addEventListener('click', () => {
         const p = input.value.trim() ? compute() : null;
