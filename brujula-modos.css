@@ -1,0 +1,11 @@
+/* Brújula 3.9: selector breve de modos, visible sobre el calendario */
+.br-mode-bar{background:linear-gradient(112deg,#faf7ff,#f5fbf8);border:1px solid #e3daee;border-radius:17px;padding:12px 15px;margin-bottom:13px;box-shadow:0 4px 18px #63569b10}
+.br-mode-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;color:#514275;font-size:13px}
+.br-mode-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.br-mode-button{cursor:pointer;min-height:38px;padding:8px 5px;border:1px solid #e2dcef;border-radius:11px;background:#fff;color:#61547b;font:inherit;font-weight:750;font-size:12px;white-space:nowrap;transition:background .12s,border-color .12s}
+.br-mode-button:hover{border-color:#9580ca}
+.br-mode-button.chosen{background:#6854aa;color:#fff;border-color:#6854aa;box-shadow:0 3px 10px #5e4d9f24}
+.br-mode-button:focus-visible,.br-mode-undo:focus-visible{outline:3px solid #ba9dea;outline-offset:2px}
+.br-mode-undo{background:transparent;border:0;text-decoration:underline;color:#6854aa;font-size:12px;font-weight:750;cursor:pointer;padding:5px}
+.br-mode-caption{font-size:12px;color:#716480;min-height:17px;margin:7px 0 0;line-height:1.5}
+@media(max-width:480px){.br-mode-bar{padding:11px}.br-mode-header{font-size:12px}.br-mode-button{font-size:11px;min-height:36px}.br-mode-choices{gap:4px}}
